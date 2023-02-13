@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
+		<title>MarquetPlace visualizer</title>
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+		<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+	</head>
+	<style>
+		 body { 			font-family:SegoeUI,Verdana,Geneva,sans-serif; font-size:16px; box-sizing:border-box; 
+							padding:0; margin:0; position:fixed; width:100%; 
+							}
+		.lz-splash { 		color:#999; text-align:center; margin-top:10%;
+							}
+		.lz-main { 			width:100%; height:var(--maxvh);  user-select: none; display:none;
+							}
+		.lz-confirm {		position:absolute;  width:300px; padding: 16px; left:calc(50% - 150px); top:calc(50vh - 50px); user-select: none;	
+							border-radius: 8px; background-color: #fff; border: 1px solid #999; box-shadow: 4px 2px 12px 2px #aaa; 
+							}
+		.lz-popup {			position:absolute;  width: auto; max-width:200px; padding: 12px; left: calc(50% - 100px); top: calc(66% - 50px);
+							border-radius: 8px; background-color: #eee; border: 1px solid #999; box-shadow: 4px 2px 12px 2px #aaa; 
+							font-size: 14px; text-align:center; display: none;
+							}
+		.lz-is {			border-radius:16px; padding:0 8px; width:250px; height: 24px;
+							border:1px solid #999; font-size: 13px;
+							}
+		.lz-bs {			cursor: pointer; color:#fff; text-align: center; border-radius: 16px; display: inline-block;
+							font-size: 16px; background-color: #27ae60; padding: 4px 12px 4px 12px; vertical-align:3px;user-select: none;
+							} 
+
+		.jsgrid-cell {		overflow:hidden; }
+		:root  {			--maxvh: 100vh  }
+		table  {			border-spacing: 0px;  }
+		@font-face {  		font-family: SegoeUI; src: url(img/segoeui.ttf);   }
+
+		body ::-webkit-scrollbar { width: 9px; height:8px } 
+		body ::-webkit-scrollbar-track { background: transparent; }
+		body ::-webkit-scrollbar-thumb { border-radius:8px ;background:#a4baec }
+		body ::-webkit-scrollbar-thumb:hover { background: #a4baec }
+
+</style>
+	<body>
+		OK
+		<div class="lz-main" id="mainDiv">
+		</div>
+	
+<script>
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// MAIN 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+	var app=null;
+
+	$(document).ready(function() {								           							// ON PAGE LOADED
+		$("#splashDiv").fadeIn(2000);																// Fade in splash page
+		});
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// APP
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class App  {																					
+
+	constructor()   																			// CONSTRUCTOR
+	{
+		app=this;																					// App global pointer
+	}
+
+
+}	// App class closure
