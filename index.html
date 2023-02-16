@@ -45,7 +45,7 @@
 	<body>
 	<div style="overflow:scroll"></div>
 			
-  <object id="svgFile" width="1000" height="1000" data="test.svg"></object>
+  <object id="svgFile" width="1000" height="1000"></object>
 	</div>		
 	
 
@@ -72,10 +72,42 @@ class App  {
 	constructor()   																			// CONSTRUCTOR
 	{
 		app=this;																					// App global pointer
-	
-	trace($("#svgFile"))
+		this.svg={};																				// Hold SVG file
+		this.paths=[];																				// Hold SVG paths
+		this.Load("test.svg");																		// Load file
+		this.selects=[];																			// Hold selects
 	}
 
+	Load(fileName, callback)																	// LOAD SVG FILE
+	{
+		let i,o;
+		$("#svgFile").prop("data", fileName);														// Load file
+		$("#svgFile").on("load", ()=>{																// When loaded
+			this.svg=document.getElementById("svgFile").contentDocument;							// Point at SVG object
+			this.paths=Array.from(this.svg.querySelectorAll("path"));								// Get all paths
+			for (i=0;i<this.paths.length;++i) {														// For each path
+				o=this.paths[i];																	// Point at it
+				o.id="ptx-"+i;																		// Set id																						
+				$(o).css({"stroke":"#000", "stroke-width":.25, "fill":"#ccc"});						// Black edge and filled
+				
+				$(o).on("click",(e)=>{ 																// ON CLICK
+					let id=e.target.id.substring(4);												// Get id
+					trace(id)
+					if (e.ctrlKey || e.shiftKey) {													// Control or shift key
+						if (i=this.selects.find(id) == -1)	this.selects.p[id]=1;					// Add to selects										
+						else								this.selects.p[id;					// Remove from selects
+					}
+					else 									this.selects=[id];						// Start over
+					for (i=0;i<this.paths.length;++i) {												// For each path
+						if (this.selects[i]!= i)  $(this.paths[i]).css({"stroke":"#000", "stroke-width":.25 });	// Unselect
+						else					  $(this.paths[i]).css({"stroke":"red", "stroke-width":1 });	// Select
+						}
+					});
+			}
+			
+				if (callback)	callback();																// Run callback
+			});
+		}
 
 }	// App class closure
 
