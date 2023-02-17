@@ -88,25 +88,40 @@ class App  {
 			for (i=0;i<this.paths.length;++i) {														// For each path
 				o=this.paths[i];																	// Point at it
 				o.id="ptx-"+i;																		// Set id																						
+				o.isSelected=0;																		// Not selected
 				$(o).css({"stroke":"#000", "stroke-width":.25, "fill":"#ccc"});						// Black edge and filled
 				
-				$(o).on("click",(e)=>{ 																// ON CLICK
-					let id=e.target.id.substring(4);												// Get id
-					trace(id)
-					if (e.ctrlKey || e.shiftKey) {													// Control or shift key
-						if (i=this.selects.find(id) == -1)	this.selects.p[id]=1;					// Add to selects										
-						else								this.selects.p[id;					// Remove from selects
-					}
-					else 									this.selects=[id];						// Start over
-					for (i=0;i<this.paths.length;++i) {												// For each path
-						if (this.selects[i]!= i)  $(this.paths[i]).css({"stroke":"#000", "stroke-width":.25 });	// Unselect
-						else					  $(this.paths[i]).css({"stroke":"red", "stroke-width":1 });	// Select
+				$(this.svg).on("click",(e)=>{ 														// ON SVG CLICK
+					if (e.target.id.substring(0,4) != "ptx-") {
+						for (i=0;i<this.paths.length;++i) this.paths[i].isSelected=0;				// Deselect all
+						showSelects();																// Show what's selected
+						e.stopImmediatePropagation();												// Stop propagation
 						}
 					});
-			}
-			
-				if (callback)	callback();																// Run callback
+				
+				$(o).on("click",(e)=>{ 																// ON PATH CLICK
+					let id=e.target.id.substring(4)-0;												// Get id
+					if (e.ctrlKey || e.shiftKey) 													// Control or shift key
+						this.paths[id].isSelected=1-this.paths[id].isSelected;						// Toggle selection status									
+					else{																			// Select just one
+						for (i=0;i<this.paths.length;++i) this.paths[i].isSelected=0;				// Deselect all
+						this.paths[id].isSelected=1;												// Select this one
+						}
+					showSelects();																	// Show what's selected
+					});
+				}
+		
+	
+			if (callback)	callback();																// Run callback
 			});
+
+		function showSelects() {																	// SHOW WHAT'S SELECTED
+			let i;
+			for (i=0;i<app.paths.length;++i) {															// For each path
+				if (app.paths[i].isSelected)	$(app.paths[i]).css({"stroke":"red", "stroke-width":1 });		// Select
+				else					  		$(app.paths[i]).css({"stroke":"#000", "stroke-width":.25 });	// Deselect
+				}
+			}
 		}
 
 }	// App class closure
