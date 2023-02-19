@@ -5,12 +5,13 @@
 		<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
 		<title>MarquetPlace visualizer</title>
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-		<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
-		<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/smoothness/jquery-ui.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+	
 	</head>
 	<style>
-		 body { 			font-family:SegoeUI,Verdana,Geneva,sans-serif; font-size:16px; box-sizing:border-box; 
+		 body { 			font-family:SegoeUI,Verdana,Geneva,sans-serif; font-size:14px; box-sizing:border-box; 
 							padding:0; margin:0; position:fixed; width:100%; 
 							}
 		.lz-splash { 		color:#999; text-align:center; margin-top:10%;
@@ -30,8 +31,8 @@
 		.lz-bs {			cursor: pointer; color:#fff; text-align: center; border-radius: 16px; display: inline-block;
 							font-size: 16px; background-color: #27ae60; padding: 4px 12px 4px 12px; vertical-align:3px;user-select: none;
 							} 
-
-		.jsgrid-cell {		overflow:hidden; }
+							
+		.ui-menu { width:100px; margin:4px 0 0 20px; font-size:13px; display:none}
 		:root  {			--maxvh: 100vh  }
 		table  {			border-spacing: 0px;  }
 		@font-face {  		font-family: SegoeUI; src: url(img/segoeui.ttf);   }
@@ -42,13 +43,34 @@
 		body ::-webkit-scrollbar-thumb:hover { background: #a4baec }
 
 </style>
-	<body>
-	<div style="overflow:scroll"></div>
-			
-  <object id="svgFile" width="1000" height="1000"></object>
-	</div>		
-	
+<body>
 
+	<div id="menuBar" style="width:100%;height:19px;background-color:#ddd">
+		<span id="fileMenu" style="margin-left:26px;cursor:pointer">File</span>
+		<select id="rotqation" style="margin-left:50px;cursor:pointer">
+			<option value="0">No rotation</option>
+			<option value="1">20 degrees</option>
+			<option value="2">40 degrees</option>
+			<option value="3">60 degrees</option>
+			<option value="4">80 degrees</option>
+			<option value="5">100 degrees</option>
+			<option value="6">120 degrees</option>
+			<option value="7">140 degrees</option>
+			<option value="8">160 degrees</option>
+		</select>
+		<select id="veneer" style="margin-left:50px;cursor:pointer"><option>No veneer set</option></select>
+		<span id="fileMenu" style="margin-left:26px;cursor:pointer">Bigger image</span>
+
+
+		<ul id="fmenu">
+			<li><div id="loadSVG">Load SVG</div></li>
+			<li><div id="saveSVG">Save SVG</div>
+			<li><div id="addVeneer">Add veneer</div>
+		</ul>		
+	</div>
+	<div id="imageDiv" style="overflow:scroll">
+		<object id="svgFile" width="1000" height="1000"></object>
+	</div>
 
 <script>
 
@@ -58,10 +80,20 @@
 
 	var app=null;
 
-	$(document).ready(function() {								           							// ON PAGE LOADED
+	$(document).ready(function() {								           						// ON PAGE LOADED
+		$("#fmenu" ).menu();																		// Alloc file menu
 		$("#splashDiv").fadeIn(2000);																// Fade in splash page
 		app=new App();																				// Alloc app
-		});
+
+		$("body").on("click", (e)=>{																// ON BODY CLICK
+			trace(e)
+			if (e.target.id != "fileMenu")	$("#fmenu").hide(); 									// If not menu button, close menu									 
+			if (e.target.id == "saveSVG")	app.SaveSVG(); 											// Save SVG								 
+			if (e.target.id == "loadSVG")	app.LoadSVG(); 											// Load SVG								 
+			if (e.target.id == "addVeneer")	app.AddVeneer(); 										// Add veneer						 
+			});											
+		$("#fileMenu").on("click", ()=>{ $("#fmenu").show(); });								// Open File menu
+	});
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // APP
@@ -146,6 +178,21 @@ class App  {
 		{
 	//		$(this.paths[pathNum])
 
+		}
+
+		SaveSVG()																					// SAVE SVG TO DISK 
+		{
+			trace("Save SVG")
+		}
+
+		LoadSVG()																					// LOAD SVG FROMTO DISK 
+		{
+			trace("Load SVG")
+		}
+
+		AddVeneer()																					// ADD VENEER
+		{
+			trace("Add Veneer")
 		}
 
 }	// App class closure
