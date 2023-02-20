@@ -47,7 +47,7 @@
 
 	<div id="menuBar" style="width:100%;height:19px;background-color:#ddd">
 		<span id="fileMenu" style="margin-left:26px;cursor:pointer">File</span>
-		<select id="rotqation" style="margin-left:50px;cursor:pointer">
+		<select id="rotation" style="margin-left:50px;cursor:pointer">
 			<option value="0">No rotation</option>
 			<option value="1">20 degrees</option>
 			<option value="2">40 degrees</option>
@@ -59,17 +59,18 @@
 			<option value="8">160 degrees</option>
 		</select>
 		<select id="veneer" style="margin-left:50px;cursor:pointer"><option>No veneer set</option></select>
-		<span id="fileMenu" style="margin-left:26px;cursor:pointer">Bigger image</span>
-
-
+		<div style="margin-right:12px;cursor:pointer;float:right">
+			<img id="scaleUp" src="img/updot.gif" style="margin-right:12px" title="Make SVG bigger">
+			<img id="scaleDown" src="img/downdot.gif" title="Make SVG smaller">
+		</div>
 		<ul id="fmenu">
 			<li><div id="loadSVG">Load SVG</div></li>
 			<li><div id="saveSVG">Save SVG</div>
 			<li><div id="addVeneer">Add veneer</div>
 		</ul>		
 	</div>
-	<div id="imageDiv" style="overflow:scroll">
-		<object id="svgFile" width="1000" height="1000"></object>
+	<div id="imageDiv" >
+		<object id="svgFile"></object>
 	</div>
 
 <script>
@@ -92,7 +93,9 @@
 			if (e.target.id == "loadSVG")	app.LoadSVG(); 											// Load SVG								 
 			if (e.target.id == "addVeneer")	app.AddVeneer(); 										// Add veneer						 
 			});											
-		$("#fileMenu").on("click", ()=>{ $("#fmenu").show(); });								// Open File menu
+		$("#scaleUp").on("click",   ()=>{app.scale*=2; app.Scale(); });								// SCALE UP
+		$("#scaleDown").on("click", ()=>{app.scale/=2; app.Scale() });								// SCALE DOWN
+		$("#fileMenu").on("click", ()=>{ $("#fmenu").show(); });									// OPEN FILE MENU
 	});
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,9 +109,18 @@ class App  {
 		app=this;																					// App global pointer
 		this.svg={};																				// Hold SVG file
 		this.paths=[];																				// Hold SVG paths
-		this.Load("test.svg");																		// Load file
+		this.Load("logo.svg");																		// Load file
 		this.selects=[];																			// Hold selects
+		this.scale=.25;																				// SVG scale factor
+		this.svgHgt=0;																				// Original SVG height
+		this.svgWid=0;																				// Original width
+	}
 
+	Scale()																						// SCALE SVG
+	{
+		let x=this.svgHgt/this.scale*.8;			
+		let y=this.svgHgt/this.scale*.8;														
+		$(this.svg.querySelectorAll("svg"))[0].setAttribute("viewBox",`${-x/10} ${-y/10} ${x} ${y}`);	
 	}
 
 	Load(fileName, callback)																	// LOAD SVG FILE
@@ -119,11 +131,17 @@ class App  {
 			this.svg=document.getElementById("svgFile").contentDocument;							// Point at SVG object
 			this.AddVeneers(["Walnut.jpg", "Maple.jpg"]);											// Add default veneers											
 			this.paths=Array.from(this.svg.querySelectorAll("path"));								// Get all paths
+			this.svgWid=$(this.svg.querySelectorAll("svg"))[0].getAttribute("width").match(/\d*/)[0];	// Get width value	
+			this.svgHgt=$(this.svg.querySelectorAll("svg"))[0].getAttribute("height").match(/\d*/)[0];	// Height
+			$(this.svg.querySelectorAll("svg"))[0].removeAttribute("height")						// Disable height
+			$(this.svg.querySelectorAll("svg"))[0].setAttribute("width","100%")						// Ser width
+			this.Scale();																			// Scale SVG
+	
 			for (i=0;i<this.paths.length;++i) {														// For each path
 				o=this.paths[i];																	// Point at it
 				o.id="ptx-"+i;																		// Set id																						
-				o.isSelected=0;																		// Not selected
-				$(o).css({"stroke":"#000", "stroke-width":.25, "fill":"#ccc"});						// Black edge and filled
+				o.isSelected=0;																	// Not selected
+				$(o).css({"stroke":"#000", "stroke-width":.05*this.scale, "fill":"#ccc"});// Black edge and filled
 				
 				$(this.svg).on("click",(e)=>{ 														// ON SVG CLICK
 					if (e.target.id.substring(0,4) != "ptx-") {
@@ -151,15 +169,14 @@ class App  {
 		function showSelects() {																	// SHOW WHAT'S SELECTED
 			let i;
 			for (i=0;i<app.paths.length;++i) {															// For each path
-				if (app.paths[i].isSelected)	$(app.paths[i]).css({"stroke":"red", "stroke-width":1 });		// Select
-				else					  		$(app.paths[i]).css({"stroke":"#000", "stroke-width":.25 });	// Deselect
+				if (app.paths[i].isSelected)	$(app.paths[i]).css({"stroke":"red", "stroke-width":.2*app.scale });		// Select
+				else					  		$(app.paths[i]).css({"stroke":"#000",  "stroke-width":.05*app.scale });		// Deselect
 				}
 			}
 		}
 
 		AddVeneers(urls)																		// ADD VENEER AS SVG PATTERN
 		{
-
 			let i,j,pat;
 			let svg=this.svg.querySelectorAll("svg")
 			for (i=0;i<urls.length;++i)	{																// For each veneer
