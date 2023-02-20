@@ -14,22 +14,22 @@
 		 body { 			font-family:SegoeUI,Verdana,Geneva,sans-serif; font-size:14px; box-sizing:border-box; 
 							padding:0; margin:0; position:fixed; width:100%; 
 							}
-		.lz-splash { 		color:#999; text-align:center; margin-top:10%;
+		.mq-splash { 		color:#999; text-align:center; margin-top:10%;
 							}
-		.lz-main { 			width:100%; height:var(--maxvh);  user-select: none; display:none;
+		.mq-main { 			width:100%; height:var(--maxvh);  user-select: none; display:none;
 							}
-		.lz-confirm {		position:absolute;  width:300px; padding: 16px; left:calc(50% - 150px); top:calc(50vh - 50px); user-select: none;	
+		.mq-confirm {		position:absolute;  width:300px; padding: 16px; left:calc(50% - 150px); top:calc(50vh - 50px); user-select: none;	
 							border-radius: 8px; background-color: #fff; border: 1px solid #999; box-shadow: 4px 2px 12px 2px #aaa; 
 							}
-		.lz-popup {			position:absolute;  width: auto; max-width:200px; padding: 12px; left: calc(50% - 100px); top: calc(66% - 50px);
+		.mq-popup {			position:absolute;  width: auto; max-width:200px; padding: 12px; left: calc(50% - 100px); top: calc(66% - 50px);
 							border-radius: 8px; background-color: #eee; border: 1px solid #999; box-shadow: 4px 2px 12px 2px #aaa; 
 							font-size: 14px; text-align:center; display: none;
 							}
-		.lz-is {			border-radius:16px; padding:0 8px; width:250px; height: 24px;
+		.mq-is {			border-radius:16px; padding:0 8px; width:250px; height: 24px;
 							border:1px solid #999; font-size: 13px;
 							}
-		.lz-bs {			cursor: pointer; color:#fff; text-align: center; border-radius: 16px; display: inline-block;
-							font-size: 16px; background-color: #27ae60; padding: 4px 12px 4px 12px; vertical-align:3px;user-select: none;
+		.mq-bs {			cursor: pointer; color:#fff; text-align: center; border-radius: 16px; display: inline-block;
+							font-size: 10px; background-color: #27ae60; padding: 0 12px; vertical-align:1px;user-select: none;
 							} 
 							
 		.ui-menu { width:100px; margin:4px 0 0 20px; font-size:13px; display:none}
@@ -45,20 +45,22 @@
 </style>
 <body>
 
-	<div id="menuBar" style="width:100%;height:19px;background-color:#ddd">
+	<div id="menuBar" style="width:100%;height:20px;background-color:#ddd">
 		<span id="fileMenu" style="margin-left:26px;cursor:pointer">File</span>
 		<select id="rotation" style="margin-left:50px;cursor:pointer">
 			<option value="0">No rotation</option>
-			<option value="1">20 degrees</option>
-			<option value="2">40 degrees</option>
-			<option value="3">60 degrees</option>
-			<option value="4">80 degrees</option>
-			<option value="5">100 degrees</option>
-			<option value="6">120 degrees</option>
-			<option value="7">140 degrees</option>
-			<option value="8">160 degrees</option>
+			<option value="1">22 degrees</option>
+			<option value="2">45 degrees</option>
+			<option value="3">68 degrees</option>
+			<option value="4">90 degrees</option>
+			<option value="5">112 degrees</option>
+			<option value="6">135 degrees</option>
+			<option value="7">160 degrees</option>
 		</select>
-		<select id="veneer" style="margin-left:50px;cursor:pointer"><option>No veneer set</option></select>
+		<select id="veneer" style="margin-left:8px;cursor:pointer">
+			<option>No veneer</option>
+		</select>
+		<div class="mq-bs" style="margin-left:8px" onclick="app.ApplyVeneer()">SET</div>
 		<div style="margin-right:12px;cursor:pointer;float:right">
 			<img id="scaleUp" src="img/updot.gif" style="margin-right:12px" title="Make SVG bigger">
 			<img id="scaleDown" src="img/downdot.gif" title="Make SVG smaller">
@@ -87,7 +89,6 @@
 		app=new App();																				// Alloc app
 
 		$("body").on("click", (e)=>{																// ON BODY CLICK
-			trace(e)
 			if (e.target.id != "fileMenu")	$("#fmenu").hide(); 									// If not menu button, close menu									 
 			if (e.target.id == "saveSVG")	app.SaveSVG(); 											// Save SVG								 
 			if (e.target.id == "loadSVG")	app.LoadSVG(); 											// Load SVG								 
@@ -114,6 +115,9 @@ class App  {
 		this.scale=.25;																				// SVG scale factor
 		this.svgHgt=0;																				// Original SVG height
 		this.svgWid=0;																				// Original width
+		this.veneers=["Anigre","Bubinga","Cherry","Eucalyptus","Lacewood","Lark",
+			"Mahogany","Makope","Maple","Padauk","Poplar","RedBurl","RedOak",
+			"Saple","SmokedOak","Walnut","Wenge","Zebrawood" ];
 	}
 
 	Scale()																						// SCALE SVG
@@ -129,7 +133,7 @@ class App  {
 		$("#svgFile").prop("data", fileName);														// Load file
 		$("#svgFile").on("load", ()=>{																// When loaded
 			this.svg=document.getElementById("svgFile").contentDocument;							// Point at SVG object
-			this.AddVeneers(["Walnut.jpg", "Maple.jpg"]);											// Add default veneers											
+			this.AddVeneers(this.veneers);															// Add default veneers											
 			this.paths=Array.from(this.svg.querySelectorAll("path"));								// Get all paths
 			this.svgWid=$(this.svg.querySelectorAll("svg"))[0].getAttribute("width").match(/\d*/)[0];	// Get width value	
 			this.svgHgt=$(this.svg.querySelectorAll("svg"))[0].getAttribute("height").match(/\d*/)[0];	// Height
@@ -141,7 +145,7 @@ class App  {
 				o=this.paths[i];																	// Point at it
 				o.id="ptx-"+i;																		// Set id																						
 				o.isSelected=0;																	// Not selected
-				$(o).css({"stroke":"#000", "stroke-width":.05*this.scale, "fill":"#ccc"});// Black edge and filled
+				$(o).css({"stroke":"#000", "stroke-width":.05*this.scale, "fill":"#fff"});// Black edge and filled
 				
 				$(this.svg).on("click",(e)=>{ 														// ON SVG CLICK
 					if (e.target.id.substring(0,4) != "ptx-") {
@@ -150,10 +154,14 @@ class App  {
 						e.stopImmediatePropagation();												// Stop propagation
 						}
 					});
+				$(o).on("dblclick",(e)=>{ 														// ON DOUBLE CLICK PATH
+					let id=e.target.id.substring(4)-0;												// Get id
+					this.paths[id].isSelected=1;													// Select this one
+					this.ApplyVeneer();																// Apply veneer to path													
+					});
 				
 				$(o).on("click",(e)=>{ 																// ON PATH CLICK
 					let id=e.target.id.substring(4)-0;												// Get id
-					$(this.paths[id]).css({"fill":"url(#pat-Walnut1)"});						
 					if (e.ctrlKey || e.shiftKey) 													// Control or shift key
 						this.paths[id].isSelected=1-this.paths[id].isSelected;						// Toggle selection status									
 					else{																			// Select just one
@@ -175,26 +183,31 @@ class App  {
 			}
 		}
 
-		AddVeneers(urls)																		// ADD VENEER AS SVG PATTERN
+		AddVeneers()																				// ADD VENEER AS SVG PATTERN
 		{
 			let i,j,pat;
 			let svg=this.svg.querySelectorAll("svg")
-			for (i=0;i<urls.length;++i)	{																// For each veneer
+			for (i=0;i<this.veneers.length;++i)	{														// For each veneer
+				$("#veneer").append("<option>"+this.veneers[i]+"</option>");							// Add to select
 				for (j=0;j<8;++j) {																		// For each angle
 					pat=document.createElementNS("http://www.w3.org/2000/svg", 'pattern'); 				// Create a pattern in SVG's namespace
 					pat.setAttribute("width","100%"); 	pat.setAttribute("height","100%"); 				// Pattern size
-					pat.setAttribute("id","pat-"+urls[i].split(".")[0]+j); 								// Id
-					pat.setAttribute("patternTransform",`rotate(${j*22.5}) scale(.2 .2)`);				// Transform
-					$(pat).html(`<image href="${urls[i]}"/>`);											// Image
+					pat.setAttribute("id","pat-"+app.veneers[i]+j); 									// Id
+					pat.setAttribute("patternTransform",`rotate(${j*22.5}) scale(.15 .15)`);				// Transform
+					$(pat).html(`<image href="veneers/${app.veneers[i]}.jpg" x="0" y="-50%" width="100%" height="100%"/>`);// Image
 					$(this.svg.querySelectorAll("svg")).prepend(pat);									// Append to SVG
 					}			
 				}
 			}
 
-			SetVeneer(pathNum, veneer)																	// SET PATH'S VENEER
+		ApplyVeneer()																					// SET PATH'S VENEER
 		{
-	//		$(this.paths[pathNum])
-
+			let i;
+			let v=$("#veneer").val();
+			let a=$("#rotation").val();
+			for (i=0;i<this.paths.length;++i) {															// For each path
+				if (this.paths[i].isSelected)	$(this.paths[i]).css({"fill":"url(#pat-"+v+a+")"});		// Set fill					
+				}
 		}
 
 		SaveSVG()																					// SAVE SVG TO DISK 
