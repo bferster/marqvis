@@ -114,7 +114,7 @@
 		$("#grain").on("change",   	()=>{ app.ScaleVeneers($("#grain").val()); });					// SET VENEER GRAIN LEVEL
 		$("#veneer").on("change",  	()=>{ app.ApplyVeneer(); });									// SET SELECTED PANES WITH VENEER
 		$("#rotation").on("change", ()=>{ app.ApplyVeneer(); });									// SET SELECTED PANES WITH VENEER
-		$("#mq-svgFilePick").on("change",(e)=>{	app.ReadSVGFile(e);	});								// SVG FILE PICK
+		$("#mq-svgFilePick").on("change",(e)=>{	app.ReadSVGFile(e);	$("#mq-svgFilePick").val("")});	// SVG FILE PICK (then delect button!)
 	});
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +166,7 @@ class App  {
 			o=this.paths[i];																		// Point at it
 			o.id="ptx-"+i;																			// Set id																						
 			o.isSelected=0;																			// Not selected
-			if (!existing) $(o).css({"stroke":"#000", "stroke-width":this.lineWid, "fill":"#fff"});	// Black edge and filled
+			if (!existing) $(o).css({"stroke":"#000", "stroke-width":this.lineWid, "fill":(o.style.stroke == "rgb(0, 0, 255)") ? "none" : "#fff"});	// Black edge and filled -- not BLUE!
 			
 			$(this.svg).on("click",(e)=>{ 															// ON SVG CLICK
 				if (e.target.id.substring(0,4) != "ptx-") {
