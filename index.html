@@ -30,8 +30,8 @@
 		.mq-bs {			cursor: pointer; color:#fff; text-align: center; border-radius: 16px; display: inline-block;
 							font-size: 10px; background-color: #27ae60; padding: 1px 12px 2px 12px;user-select: none;
 							} 
-							
-		.ui-menu { width:100px; margin:4px 0 0 20px; font-size:13px; display:none}
+
+		.ui-menu { width:150px; margin:2px 0 0 20px; font-size:13px; display:none;z-index:200;cursor:pointer;background:#ddd;position:relative }
 		:root  {			--maxvh: 100vh;  }
 		table  {			border-spacing: 0px;  }
 		@font-face {  		font-family: SegoeUI; src: url(img/segoeui.ttf);   }
@@ -40,7 +40,6 @@
 		body ::-webkit-scrollbar-track { background: transparent; }
 		body ::-webkit-scrollbar-thumb { border-radius:8px ;background:#a4baec }
 		body ::-webkit-scrollbar-thumb:hover { background: #a4baec }
-
 
 </style>
 <body>
@@ -81,12 +80,12 @@
 			<img id="scaleDown" src="img/downdot.gif" style="margin-right:12px" title="Make SVG smaller">
 			<img id="scaleUp" src="img/updot.gif" title="Make SVG bigger">
 		</div>
-		<ul id="fmenu" style="width:150px;margin-right:12px;cursor:pointer">
+		<ul id="fmenu" style="margin-right:12px">
 			<li><div id="loadSVG">Load SVG</div></li>
 			<li><div id="loadSample">Load sample SVG</div></li>
 			<li><div id="saveSVG">Save SVG</div></li>
 		</ul>		
-		<ul id="emenu" style="width:150px;margin-left:75px;cursor:pointer;background-color:#ccc">
+		<ul id="emenu" style="margin-left:75px">
 			<li><div id="addColor">Add new color</div></li>
 			<li><div id="undoShape">Undo</div></li>
 			<li><div id="setBG">Set background</div></li>
@@ -136,9 +135,6 @@
 // APP
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var timg;
-
-
 class App  {																					
 
 	constructor()   																			// CONSTRUCTOR
@@ -157,7 +153,8 @@ class App  {
 
 		$("#svgFile").prop("data", "logo.svg");														// Load file
 		$("#svgFile").on("load", ()=>{ this.ProcessSVG(true); });									// When loaded
-	}
+		for (let i=0;i<this.veneers.length;++i)	$("#veneer").append("<option>"+this.veneers[i]+"</option>"); // Add to select
+		}
 
 	Scale()																						// SCALE SVG
 	{
@@ -242,7 +239,6 @@ class App  {
 		let svg=this.svg.querySelectorAll("svg")
 		let vs=this.bBox.width/window.innerWidth*this.vScale;										// Veneer scale based on frame
 		for (i=0;i<this.veneers.length;++i)	{														// For each veneer
-			$("#veneer").append("<option>"+this.veneers[i]+"</option>");							// Add to select
 			for (j=0;j<12;++j) {																	// For each angle
 				pat=document.createElementNS("http://www.w3.org/2000/svg", 'pattern'); 				// Create a pattern in SVG's namespace
 				pat.setAttribute("patternUnits","userSpaceOnUse");									// Pattern unit
@@ -263,13 +259,16 @@ class App  {
 			$("#imageDiv").css("background-color","#fff");											// White
 		else{																						// An image
 			$("#imageDiv").css("background",`url(veneers/${$("#veneer").val()}.jpg) 0 0 repeat`);	// Set url																				// A veneer
-			$("#imageDiv").css("transform",`translate(-50%,-50%) rotate(${$("#rotation").val()*15}deg) scale(.33)`);		// Set rotation																				// A veneer
+			$("#imageDiv").css("transform",`translate(-50%,-50%) rotate(${$("#rotation").val()*15}deg) scale(.32)`);		// Set rotation																				// A veneer
 			}
 	}
 
 	ScaleVeneers(scale)																			// SCALE VENEERS
 	{
 		let i,r;
+		$("#imageDiv").css("transform",`translate(-50%,-50%) scale(${.8*scale})`);					// Set bg scale																				// A veneer
+
+
 		let vs=this.bBox.width/window.innerWidth*scale;												// Veneer scale based on frame
 		let v=Array.from(this.svg.querySelectorAll("pattern"));										// Get all patterns
 		for (i=0;i<v.length;++i) {																	// For each one
@@ -429,7 +428,7 @@ function trace(msg, p1, p2, p3, p4)																// CONSOLE
 		}
 
 
-		function SaveTextAsFile(file, contents)															// SAVE TEXT TO LOCAL FILE
+	function SaveTextAsFile(file, contents)															// SAVE TEXT TO LOCAL FILE
 	{
 		if (file.charAt(0) == "*") {																	// If asking
 				GetTextBox("Type file name","", "", (s)=>{ SaveTextAsFile(s+file.substr(1), contents); });		// Ask for name
