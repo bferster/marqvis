@@ -32,7 +32,7 @@
 							} 
 							
 		.ui-menu { width:100px; margin:4px 0 0 20px; font-size:13px; display:none}
-		:root  {			--maxvh: 100vh  }
+		:root  {			--maxvh: 100vh;  }
 		table  {			border-spacing: 0px;  }
 		@font-face {  		font-family: SegoeUI; src: url(img/segoeui.ttf);   }
 
@@ -41,11 +41,17 @@
 		body ::-webkit-scrollbar-thumb { border-radius:8px ;background:#a4baec }
 		body ::-webkit-scrollbar-thumb:hover { background: #a4baec }
 
+
 </style>
 <body>
 
-	<div id="menuBar" style="width:100%;height:24px;background-color:#ddd;user-select:none;padding-top:3px">
+		<div style="width:100%;height:calc(100vh - 24px);top:24px;pointer-events:none;position:absolute;overflow:hidden">
+			<div id="imageDiv" style="position:relative;width:2000%;height:2000%"></div>
+		</div>
+		<object id="svgFile" style="position:absolute;top:100px"></object>
+		<div id="menuBar" style="width:100%;height:24px;background-color:#ddd;user-select:none;padding-top:3px">
 		<span id="fileMenu" style="margin-left:26px;cursor:pointer">File</span>
+		<span id="editMenu" style="margin-left:26px;cursor:pointer">Edit</span>
 		<select id="grain" class="mq-is" style="margin-left:50px;cursor:pointer">
 			<option value=".4">Normal grain</option>
 			<option value=".1">Very fine grain</option>
@@ -79,11 +85,14 @@
 			<li><div id="loadSVG">Load SVG</div></li>
 			<li><div id="loadSample">Load sample SVG</div></li>
 			<li><div id="saveSVG">Save SVG</div></li>
-			<!--li><div id="addVeneer">Add veneer</div></li-->
+		</ul>		
+		<ul id="emenu" style="width:150px;margin-left:75px;cursor:pointer;background-color:#ccc">
+			<li><div id="addColor">Add new color</div></li>
+			<li><div id="undoShape">Undo</div></li>
+			<li><div id="setBG">Set background</div></li>
 			<li><div id="showHelp">Show help</div></li>
 		</ul>		
 	</div>
-	<div id="imageDiv"><object id="svgFile"></object></div>
 	<input type="file" id="mq-svgFilePick" style="display:none">
 	<input type="file" id="mq-veneerFilePick" style="display:none">
 
@@ -97,20 +106,27 @@
 
 	$(document).ready(function() {								           						// ON PAGE LOADED
 		$("#fmenu" ).menu();																		// Alloc file menu
+		$("#emenu" ).menu();																		// Alloc file menu
 		$("#splashDiv").fadeIn(2000);																// Fade in splash page
 		app=new App();																				// Alloc app
 		$("body").on("click", (e)=>{																// ON BODY CLICK
 			if (e.target.id != "fileMenu")	$("#fmenu").hide(); 									// If not menu button, close menu									 
+			if (e.target.id != "editMenu")	$("#emenu").hide(); 									// If not menu button, close menu									 
 			if (e.target.id == "saveSVG")	app.SaveSVG(); 											// Save SVG								 
 			if (e.target.id == "loadSVG")	$("#mq-svgFilePick").trigger("click");	 				// Load SVG								 
 			if (e.target.id == "loadSample")$("#svgFile").prop("data", "steamboat.svg"),$("#svgFile").on("load", ()=>{ app.ProcessSVG(); }); // Load sampleSVG								 
 			if (e.target.id == "addVeneer")	$("#mq-veneerFilePick").trigger("click");				// Load veneer	
 			if (e.target.id == "showHelp") 	window.open("https://docs.google.com/document/d/e/2PACX-1vQN3NGoUq_UyiJbCMU6E8LtINwwv-smmPJShWXnUxt1RvmJZmTonavAGRiYSemsEJ51Bt6T3ZPHh3eV/pub","_blank");
-			if (e.target.id == "showIDs")	app.ShowIDs();											// Show IDs					 
+			if (e.target.id == "setBG")		app.SetBackground();									// Set background
+			if (e.target.id == "undoShape")	app.UnDo();												// Undo	
+			if (e.target.id == "showIDs")	app.ShowIDs();											// Show IDs	
+			if (e.target.id == "addColor") 	GetColor("Choose color","Pick new shape color","#009900",(c)=>{ 	// Add shape color
+													$("#veneer").append("<option>Color="+c+"</option>"); });	// Add to select
 			});											
-		$("#scaleUp").on("click",  	()=>{app.scale*=1.5; app.Scale(); });							// SCALE UP
-		$("#scaleDown").on("click",	()=>{app.scale/=1.5; app.Scale() });							// SCALE DOWN
+		$("#scaleUp").on("click",  	()=>{app.scale*=1.2; app.Scale(); });							// SCALE UP
+		$("#scaleDown").on("click",	()=>{app.scale/=1.2; app.Scale() });							// SCALE DOWN
 		$("#fileMenu").on("click", 	()=>{ $("#fmenu").show(); });									// OPEN FILE MENU
+		$("#editMenu").on("click", 	()=>{ $("#emenu").show(); });									// OPEN EDIT MENU
 		$("#grain").on("change",   	()=>{ app.ScaleVeneers($("#grain").val()); });					// SET VENEER GRAIN LEVEL
 		$("#mq-svgFilePick").on("change",(e)=>{	app.ReadSVGFile(e);	$("#mq-svgFilePick").val("")});	// SVG FILE PICK (then delect button!)
 		$("#mq-veneerFilePick").on("change",(e)=>{	app.LoadVeneerFile(e);	$("#mq-veneerFilePick").val("")});	// VENEER FILE PICK (then delect button!)
@@ -138,15 +154,16 @@ class App  {
 		this.veneers=["Anigre","Birch","Bubinga","Cherry","Eucalyptus","Lacewood",					// Veneer list
 			"Lark","Mahogany","Makope","Maple","Padauk","Poplar","RedBurl","RedOak",
 			"Saple","SmokedOak","Walnut","Wenge","Zebrawood" ];
-		$("#svgFile").prop("data", "logo.svg");													// Load file
-		$("#svgFile").on("load", ()=>{ this.ProcessSVG(true); });										// When loaded
+
+		$("#svgFile").prop("data", "logo.svg");														// Load file
+		$("#svgFile").on("load", ()=>{ this.ProcessSVG(true); });									// When loaded
 	}
 
 	Scale()																						// SCALE SVG
 	{
-		let x=this.bBox.width/this.scale/.8;			
-		let y=this.bBox.height/this.scale/.8;														
-		$(this.svg.querySelectorAll("svg"))[0].setAttribute("viewBox",`${-x/10+this.bBox.x} ${this.bBox.y} ${x} ${y}`);	
+		let x=this.bBox.width/this.scale/.8;														// Set x scale 80%
+		let y=this.bBox.height/this.scale/.8;														// Y
+		$(this.svg.querySelectorAll("svg"))[0].setAttribute("viewBox",`${-x/10+this.bBox.x} ${this.bBox.y} ${x} ${y}`);	// Set SVG view box
 	}
 
 	ProcessSVG(existing=0, callback)															// PROCESS SVG AFTER LOADING
@@ -175,6 +192,7 @@ class App  {
 
 		$(this.svg).on("click",(e)=>{ 																// ON SVG CLICK
 			$("#fmenu").hide(); 																	// Close file menu									 
+			$("#emenu").hide(); 																	// Close edit menu									 
 			if (e.target.id.substring(0,4) != "ptx-") {												// If a shape
 				for (i=0;i<this.paths.length;++i) this.paths[i].isSelected=0;						// Deselect all
 				showSelects();																		// Show what's selected
@@ -225,7 +243,7 @@ class App  {
 		let vs=this.bBox.width/window.innerWidth*this.vScale;										// Veneer scale based on frame
 		for (i=0;i<this.veneers.length;++i)	{														// For each veneer
 			$("#veneer").append("<option>"+this.veneers[i]+"</option>");							// Add to select
-			for (j=0;j<12;++j) {																		// For each angle
+			for (j=0;j<12;++j) {																	// For each angle
 				pat=document.createElementNS("http://www.w3.org/2000/svg", 'pattern'); 				// Create a pattern in SVG's namespace
 				pat.setAttribute("patternUnits","userSpaceOnUse");									// Pattern unit
 				pat.setAttribute("width","1024"); 	pat.setAttribute("height","1024"); 				// Pattern size
@@ -235,7 +253,19 @@ class App  {
 				$(this.svg.querySelectorAll("svg")).prepend(pat);									// Append to SVG
 				}			
 			}
-		}
+	}
+
+	SetBackground()																				// SET BACKGROUND
+	{
+		if ($("#veneer").val().match(/Color=#/))													// A flat color
+			$("#imageDiv").css("background-color",$("#veneer").val().substring(6));					// Extract set color
+		else if ($("#veneer").val() == "No veneer")													// No veneer
+			$("#imageDiv").css("background-color","#fff");											// White
+		else{																						// An image
+			$("#imageDiv").css("background",`url(veneers/${$("#veneer").val()}.jpg) 0 0 repeat`);	// Set url																				// A veneer
+			$("#imageDiv").css("transform",`translate(-50%,-50%) rotate(${$("#rotation").val()*15}deg) scale(.33)`);		// Set rotation																				// A veneer
+			}
+	}
 
 	ScaleVeneers(scale)																			// SCALE VENEERS
 	{
@@ -252,11 +282,11 @@ class App  {
 	{
 		let i;
 		let str="url(#pat-"+$("#veneer").val()+$("#rotation").val()+")";							// Set fill id
-		if ($("#veneer").val() == "No veneer")	str="#ffffff";										// Fill with color
+		if ($("#veneer").val() == "No veneer")			str="#ffffff";								// Fill with white
+		else if ($("#veneer").val().match(/Color=#/))	str=$("#veneer").val().substring(6);		// Extract set color
 		this.Do();																					// Save state for undo
-		for (i=0;i<this.paths.length;++i) {															// For each path
-			if (this.paths[i].isSelected)	$(this.paths[i]).css("fill",str);						// Set fill					
-			}
+		for (i=0;i<this.paths.length;++i)															// For each path
+			if (this.paths[i].isSelected) $(this.paths[i]).css("fill",str);							// Set fill					
 	}
 
 	SaveSVG()																					// SAVE SVG TO DISK 
@@ -283,7 +313,6 @@ class App  {
 		for (i=0;i<this.paths.length;++i) $(this.paths[i]).css("fill",o[i]);						// For each path, restore fill
 		Sound("ding");																				// Ding
 	}
-
 		
 	LoadVeneerFile(e) 																			// READ FILE FROM LOCAL COMPUTER
 	{
@@ -293,7 +322,6 @@ class App  {
 		let reader=new FileReader();																// Open reader
 		reader.readAsDataURL(file);																	// Convert to text
 		reader.onload=(e)=>{  																		// WHEN LOADED
-
 			timg=new Image()
 			timg.src=e.target.result
 		}
@@ -349,7 +377,7 @@ function trace(msg, p1, p2, p3, p4)																// CONSOLE
 			snd.volume=100/100;																			// Set volume
 			snd.play();																					// Play it
 			}
-		}
+	}
 
 	function PopUp(msg, time, div)																	// TIMED POPUP
 	{
@@ -383,7 +411,25 @@ function trace(msg, p1, p2, p3, p4)																// CONSOLE
 		$("#dialogCancel").on("click", function() {	$("#confirmBoxDiv").remove(); });								// ON CANCEL
 		}
 
-	function SaveTextAsFile(file, contents)															// SAVE TEXT TO LOCAL FILE
+	function GetColor(title, content, def, callback)												// GET COLOR
+	{
+		$("#confirmBoxDiv").remove();																	// Remove 
+		$("body").append("<div class='mq-confirm' id='confirmBoxDiv'></div>");							// Add box								
+		var str="<img src='img/logo64.png' width='64' style='vertical-align:-8px'/>&nbsp;&nbsp;";								
+		str+="<span style='font-size:14px;float:right'><b>"+title+"</b></span><br><br>";
+		str+="<p>"+content+"<p>";
+		str+="<p><input class='mq-is' style='width:75%;height:20px' type='color' id='gtBoxTt' value='"+def+"'></p>";
+		str+="<div id='dialogOK' class='mq-bs'>OK</div>";
+		str+="<div id='dialogCancel' class='mq-bs' style='margin-left:8px;background-color:#999'>Cancel</div></div>";
+		$("#confirmBoxDiv").html(str);																	// Add to div
+		$("#gtBoxTt").focus();																			// Focus on button
+		$("#gtBoxTt").on("change", function() {	callback($("#gtBoxTt").val()); $("#confirmBoxDiv").remove(); });	// ONE ENTER
+		$("#dialogOK").on("click", function() {	callback($("#gtBoxTt").val()); $("#confirmBoxDiv").remove(); });	// ON OK 
+		$("#dialogCancel").on("click", function() {	$("#confirmBoxDiv").remove(); });								// ON CANCEL
+		}
+
+
+		function SaveTextAsFile(file, contents)															// SAVE TEXT TO LOCAL FILE
 	{
 		if (file.charAt(0) == "*") {																	// If asking
 				GetTextBox("Type file name","", "", (s)=>{ SaveTextAsFile(s+file.substr(1), contents); });		// Ask for name
