@@ -44,10 +44,10 @@
 </style>
 <body>
 
-		<div style="width:100%;height:calc(100vh - 24px);top:24px;pointer-events:none;position:absolute;overflow:hidden">
-			<div id="imageDiv" style="position:relative;width:2000%;height:2000%"></div>
+		<div id="imageDiv" style="width:100%;height:calc(100vh - 24px);top:24px;pointer-events:none;position:absolute;overflow:hidden">
+			<div id="backDiv" style="position:relative;width:2000%;height:2000%"></div>
 		</div>
-		<object id="svgFile" style="position:absolute;top:100px"></object>
+		<object id="svgFile" style="position:absolute;top:26px"></object>
 		<div id="menuBar" style="width:100%;height:24px;background-color:#ddd;user-select:none;padding-top:3px">
 		<span id="fileMenu" style="margin-left:26px;cursor:pointer">File</span>
 		<span id="editMenu" style="margin-left:26px;cursor:pointer">Edit</span>
@@ -129,6 +129,26 @@
 		$("#grain").on("change",   	()=>{ app.ScaleVeneers($("#grain").val()); });					// SET VENEER GRAIN LEVEL
 		$("#mq-svgFilePick").on("change",(e)=>{	app.ReadSVGFile(e);	$("#mq-svgFilePick").val("")});	// SVG FILE PICK (then delect button!)
 		$("#mq-veneerFilePick").on("change",(e)=>{	app.LoadVeneerFile(e);	$("#mq-veneerFilePick").val("")});	// VENEER FILE PICK (then delect button!)
+	
+		jQuery.fn.single_double_click = function(single_click_callback, double_click_callback, timeout) {
+			return this.each(function(){
+				var clicks = 0, self = this;
+				jQuery(this).click(function(event){
+				clicks++;
+				if (clicks == 1) {
+					setTimeout(function(){
+					if(clicks == 1) {
+						single_click_callback.call(self, event);
+					} else {
+						double_click_callback.call(self, event);
+					}
+					clicks = 0;
+					}, timeout || 300);
+				}
+				});
+			});
+		}
+
 	});
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,7 +169,7 @@ class App  {
 		this.bBox={}																				// Original SVG bounding box
 		this.veneers=["Anigre","Birch","Bubinga","Cherry","Eucalyptus","Lacewood",					// Veneer list
 			"Lark","Mahogany","Makope","Maple","Padauk","Poplar","RedBurl","RedOak",
-			"Saple","SmokedOak","Walnut","Wenge","Zebrawood" ];
+			"Saple","SmokedOak","SpanishCedar","Walnut","Wenge","Zebrawood" ];
 
 		$("#svgFile").prop("data", "logo.svg");														// Load file
 		$("#svgFile").on("load", ()=>{ this.ProcessSVG(true); });									// When loaded
@@ -171,7 +191,7 @@ class App  {
 		this.svg=document.getElementById("svgFile").contentDocument;								// Point at SVG object
 		this.paths=Array.from(this.svg.querySelectorAll("path"));									// Get all paths
 		this.bBox=$(this.svg.querySelectorAll("svg"))[0].getBBox();									// Get bounding boxs
-		if (!existing) 	this.AddVeneers(this.veneers);												// Add default veneers id new											
+		this.AddVeneers(this.veneers);																// Add default veneers										
 		$(this.svg.querySelectorAll("svg"))[0].removeAttribute("height")							// Disable height
 		$(this.svg.querySelectorAll("svg"))[0].setAttribute("width",window.innerWidth)				// Set width
 		$(this.svg.querySelectorAll("svg"))[0].setAttribute("height",window.innerHeight-30)			// Set width
@@ -203,34 +223,39 @@ class App  {
 			o.isSelected=0;																			// Not selected
 			if (!existing) $(o).css({"stroke":"#000", "stroke-width":lineWid, "fill":(o.style.stroke == "rgb(0, 0, 255)") ? "none" : "#fff"});	// Black edge and filled -- not BLUE!
 	
-			$(o).on("dblclick",(e)=>{ 																// ON DOUBLE CLICK PATH
-				let id=e.target.id.substring(4)-0;													// Get id
-				this.paths[id].isSelected=1;														// Select this one
-				this.ApplyVeneer();																	// Apply veneer to path													
-				e.stopImmediatePropagation();														// Stop propagation
-				});
-			
-			$(o).on("click",(e)=>{ 																	// ON PATH CLICK
-				let id=e.target.id.substring(4)-0;													// Get id
-				if (e.ctrlKey || e.shiftKey) 														// Control or shift key
-					this.paths[id].isSelected=1-this.paths[id].isSelected;							// Toggle selection status									
-				else{																				// Select just one
-					for (i=0;i<this.paths.length;++i) this.paths[i].isSelected=0;					// Deselect all
-					this.paths[id].isSelected=1;													// Select this one
+			$(o).single_double_click((e)=>{															// ON SINGLE/DOUBLE CLICK
+				let id=e.target.id.substring(4)-0;														// Get id
+				if (e.ctrlKey || e.shiftKey) 															// Control or shift key
+					this.paths[id].isSelected=1-this.paths[id].isSelected;								// Toggle selection status									
+				else{																					// Select just one
+					for (i=0;i<this.paths.length;++i) this.paths[i].isSelected=0;						// Deselect all
+					this.paths[id].isSelected=1;														// Select this one
 					}
-				showSelects();																		// Show what's selected
-				e.stopImmediatePropagation();														// Stop propagation
-				});
-			}
-	if (callback)	callback();																		// Run callback if set
-
-	function showSelects() {																		// SHOW WHAT'S SELECTED
-		let i;
-		for (i=0;i<app.paths.length;++i) {															// For each path
-			if (app.paths[i].isSelected)	$(app.paths[i]).css({"stroke":"red",  "stroke-width":lineWid*2 });	// Select
-			else					  		$(app.paths[i]).css({"stroke":"#000", "stroke-width":lineWid   });	// Deselect
-			}
+				showSelects();																			// Show what's selected
+				e.stopImmediatePropagation();															// Stop propagation
+				},(e)=>{																				// DOUBLE CLICK
+					let id=e.target.id.substring(4)-0;													// Get id
+					this.paths[id].isSelected=1;														// Select it
+					this.ApplyVeneer();																	// Apply veneer to path													
+					e.stopImmediatePropagation();														// Stop propagation
+					}
+				);
 		}
+
+		function showSelects() {																		// SHOW WHAT'S SELECTED
+			let i,v;
+			for (i=0;i<app.paths.length;++i) {															// For each path
+				if (app.paths[i].isSelected) {
+					$(app.paths[i]).css({"stroke":"red",  "stroke-width":lineWid*2 });					// Select
+					v=$(app.paths[i]).css("fill").match(/url\("#pat-(.*?)(\d+)"\)/i);					// Get veneer and rot
+					if (v) {																			// If a veneer set
+						$("#veneer").val(v[1]);															// Set type in select										
+						$("#rotation").val(v[2]);														// Rotation
+						}
+					}
+				else $(app.paths[i]).css({"stroke":"#000", "stroke-width":lineWid   });					// Deselect
+				}
+			}
 	}
 
 	AddVeneers()																				// ADD VENEER AS SVG PATTERN
@@ -238,6 +263,7 @@ class App  {
 		let i,j,pat;
 		let svg=this.svg.querySelectorAll("svg")
 		let vs=this.bBox.width/window.innerWidth*this.vScale;										// Veneer scale based on frame
+		$(this.svg.querySelectorAll("pattern")).remove();											// Clear all old patterns out
 		for (i=0;i<this.veneers.length;++i)	{														// For each veneer
 			for (j=0;j<12;++j) {																	// For each angle
 				pat=document.createElementNS("http://www.w3.org/2000/svg", 'pattern'); 				// Create a pattern in SVG's namespace
@@ -254,21 +280,19 @@ class App  {
 	SetBackground()																				// SET BACKGROUND
 	{
 		if ($("#veneer").val().match(/Color=#/))													// A flat color
-			$("#imageDiv").css("background-color",$("#veneer").val().substring(6));					// Extract set color
+			$("#backDiv").css("background-color",$("#veneer").val().substring(6));					// Extract set color
 		else if ($("#veneer").val() == "No veneer")													// No veneer
-			$("#imageDiv").css("background-color","#fff");											// White
+			$("#backDiv").css("background-color","#fff");											// White
 		else{																						// An image
-			$("#imageDiv").css("background",`url(veneers/${$("#veneer").val()}.jpg) 0 0 repeat`);	// Set url																				// A veneer
-			$("#imageDiv").css("transform",`translate(-50%,-50%) rotate(${$("#rotation").val()*15}deg) scale(.32)`);		// Set rotation																				// A veneer
+			$("#backDiv").css("background",`url(veneers/${$("#veneer").val()}.jpg) 0 0 repeat`);	// Set url																				// A veneer
+			$("#backDiv").css("transform",`translate(-50%,-50%) rotate(${$("#rotation").val()*15}deg) scale(.32)`);		// Set rotation																				// A veneer
 			}
 	}
 
 	ScaleVeneers(scale)																			// SCALE VENEERS
 	{
 		let i,r;
-		$("#imageDiv").css("transform",`translate(-50%,-50%) scale(${.8*scale})`);					// Set bg scale																				// A veneer
-
-
+		$("#backDiv").css("transform",`translate(-50%,-50%) scale(${.8*scale})`);					// Set bg scale																				// A veneer
 		let vs=this.bBox.width/window.innerWidth*scale;												// Veneer scale based on frame
 		let v=Array.from(this.svg.querySelectorAll("pattern"));										// Get all patterns
 		for (i=0;i<v.length;++i) {																	// For each one
@@ -323,9 +347,8 @@ class App  {
 		reader.onload=(e)=>{  																		// WHEN LOADED
 			timg=new Image()
 			timg.src=e.target.result
-		}
-
-		}
+			}
+	}
 	
 	ReadSVGFile(e) 																				// READ FILE FROM LOCAL COMPUTER
 	{
@@ -342,7 +365,7 @@ class App  {
 			for (i=0;i<s.children.length;++i) 	o.push(s.children[i]);								// Add to array
 			for (i=0;i<o.length;++i) root.append(o[i]);												// Add to SVG
 			this.ProcessSVG(v.length);																// Scale
-			};
+		};
 	}
 
 }	// App class closure
