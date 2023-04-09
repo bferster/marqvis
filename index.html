@@ -76,6 +76,7 @@
 			<option>No veneer</option>
 		</select>
 		<div class="mq-bs" style="margin-left:9px" onclick="app.ApplyVeneer()">SET</div>
+		<span id="mq-style"></span>
 		<div style="margin-right:12px;cursor:pointer;float:right">
 			<img id="scaleDown" src="img/downdot.gif" style="margin-right:12px" title="Make SVG smaller">
 			<img id="scaleUp" src="img/updot.gif" title="Make SVG bigger">
@@ -221,25 +222,26 @@ class App  {
 			o=this.paths[i];																		// Point at it
 			o.id="ptx-"+i;																			// Set id																						
 			o.isSelected=0;																			// Not selected
-			if (!existing) $(o).css({"stroke":"#000", "stroke-width":lineWid, "fill":(o.style.stroke == "rgb(0, 0, 255)") ? "none" : "#fff"});	// Black edge and filled -- not BLUE!
-	
-			$(o).single_double_click((e)=>{															// ON SINGLE/DOUBLE CLICK
-				let id=e.target.id.substring(4)-0;														// Get id
-				if (e.ctrlKey || e.shiftKey) 															// Control or shift key
-					this.paths[id].isSelected=1-this.paths[id].isSelected;								// Toggle selection status									
-				else{																					// Select just one
-					for (i=0;i<this.paths.length;++i) this.paths[i].isSelected=0;						// Deselect all
-					this.paths[id].isSelected=1;														// Select this one
+			if (!existing) $(o).css({"stroke":"#000", "stroke-width":lineWid, "fill-opacity":1,"fill":(o.style.stroke == "rgb(0, 0, 255)") ? "none" : "#fff"});	// Black edge and filled -- not BLUE!
+
+			$(o).on("click",(e)=>{																	// ON CLICK
+				let id=e.target.id.substring(4)-0;													// Get id
+				if (e.ctrlKey || e.shiftKey) 														// Control or shift key
+					this.paths[id].isSelected=1-this.paths[id].isSelected;							// Toggle selection status									
+				else{																				// Select just one
+					for (i=0;i<this.paths.length;++i) this.paths[i].isSelected=0;					// Deselect all
+					this.paths[id].isSelected=1;													// Select this one
 					}
-				showSelects();																			// Show what's selected
-				e.stopImmediatePropagation();															// Stop propagation
-				},(e)=>{																				// DOUBLE CLICK
-					let id=e.target.id.substring(4)-0;													// Get id
-					this.paths[id].isSelected=1;														// Select it
-					this.ApplyVeneer();																	// Apply veneer to path													
-					e.stopImmediatePropagation();														// Stop propagation
-					}
-				);
+				showSelects();																		// Show what's selected
+				e.stopImmediatePropagation();														// Stop propagation
+				});
+
+			$(o).on("dblclick",(e)=>{																// ON DOUBLE CLICK
+				let id=e.target.id.substring(4)-0;													// Get id
+				this.paths[id].isSelected=1;														// Select it
+				this.ApplyVeneer();																	// Apply veneer to path													
+				e.stopImmediatePropagation();														// Stop propagation
+				});
 		}
 
 		function showSelects() {																		// SHOW WHAT'S SELECTED
@@ -248,10 +250,7 @@ class App  {
 				if (app.paths[i].isSelected) {
 					$(app.paths[i]).css({"stroke":"red",  "stroke-width":lineWid*2 });					// Select
 					v=$(app.paths[i]).css("fill").match(/url\("#pat-(.*?)(\d+)"\)/i);					// Get veneer and rot
-					if (v) {																			// If a veneer set
-						$("#veneer").val(v[1]);															// Set type in select										
-						$("#rotation").val(v[2]);														// Rotation
-						}
+					if (v) $("#mq-style").html("&nbsp; &nbsp; "+v[1]+" "+v[2]*15+"°");					// If a veneer set, show it
 					}
 				else $(app.paths[i]).css({"stroke":"#000", "stroke-width":lineWid   });					// Deselect
 				}
