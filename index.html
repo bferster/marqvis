@@ -172,9 +172,10 @@ class App  {
 		this.scale=1;																				// SVG scale factor
 		this.vScale=.4;																				// Veneer scaling
 		this.bBox={}																				// Original SVG bounding box
-		this.veneers=["Anigre","Birch","Bubinga","Cherry","Eucalyptus","Lacewood",					// Veneer list
-			"Lark","Mahogany","Makope","Maple","Padauk","Poplar","RedBurl","RedOak",
-			"Saple","SmokedOak","SpanishCedar","Walnut","Wenge","Zebrawood" ];
+		this.veneers=["Anigre","Bamboo","Birch","BirdsEyeOak","Bloodwood","Bubinga","Cherry",		// Veneer list
+			"Eucalyptus","Lacewood","Lark","Mahogany","Makope","Maple","Monkeypod","Padauk",
+			"Paulonia","Poplar","RedBurl","RedOak",	"Saple","SpanishCedar","Walnut","Wenge","Zebrawood" 
+			];
 
 		$("#svgFile").prop("data", "logo.svg");														// Load file
 		$("#svgFile").on("load", ()=>{ this.ProcessSVG(true); });									// When loaded
