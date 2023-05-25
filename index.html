@@ -90,6 +90,7 @@
 			<li><div id="addColor">Add new color</div></li>
 			<li><div id="undoShape">Undo</div></li>
 			<li><div id="setBG">Set background</div></li>
+			<li><div id="sendBack">Send to back</div></li>
 			<li><div id="showHelp">Show help</div></li>
 		</ul>		
 	</div>
@@ -117,6 +118,7 @@
 			if (e.target.id == "loadSample")$("#svgFile").prop("data", "steamboat.svg"),$("#svgFile").on("load", ()=>{ app.ProcessSVG(); }); // Load sampleSVG								 
 			if (e.target.id == "addVeneer")	$("#mq-veneerFilePick").trigger("click");				// Load veneer	
 			if (e.target.id == "showHelp") 	window.open("https://docs.google.com/document/d/e/2PACX-1vQN3NGoUq_UyiJbCMU6E8LtINwwv-smmPJShWXnUxt1RvmJZmTonavAGRiYSemsEJ51Bt6T3ZPHh3eV/pub","_blank");
+			if (e.target.id == "sendBack")	app.SendToBack();										// Send to back
 			if (e.target.id == "setBG")		app.SetBackground();									// Set background
 			if (e.target.id == "undoShape")	app.UnDo();												// Undo	
 			if (e.target.id == "showIDs")	app.ShowIDs();											// Show IDs	
@@ -290,6 +292,21 @@ class App  {
 				$(this.svg.querySelectorAll("svg")).prepend(pat);									// Append to SVG
 				}			
 			}
+	}
+
+	SendToBack()																				// SEND PATH TO BACK
+	{
+		let i;
+		for (i=0;i<this.paths.length;++i) {															// For each path
+			if (this.paths[i].isSelected) {															// If selected	
+				let t=$(this.paths[i]);																// Copy shape
+				let root=$(this.paths[i]).parent();													// Root of group
+				$(this.paths[i]).remove();															// Remove path
+				root.prepend(t);																	// Point at root
+				this.ProcessSVG(true);																// Re-process
+				break;																				// Quit
+				}
+			}						
 	}
 
 	SetBackground()																				// SET BACKGROUND
