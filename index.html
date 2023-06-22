@@ -122,7 +122,7 @@
 			if (e.target.id != "editMenu")	$("#emenu").hide(); 									// If not menu button, close menu									 
 			if (e.target.id == "saveSVG")	app.SaveSVG(); 											// Save SVG								 
 			if (e.target.id == "loadSVG")	$("#mq-svgFilePick").trigger("click");	 				// Load SVG								 
-			if (e.target.id == "loadSample")$("#svgFile").prop("data", "steamboat.svg"),$("#svgFile").on("load", ()=>{ app.ProcessSVG(); }); // Load sampleSVG								 
+			if (e.target.id == "loadSample")$("#svgFile").prop("data", "swallowtail.svg"),$("#svgFile").on("load", ()=>{ app.ProcessSVG(); }); // Load sampleSVG								 
 			if (e.target.id == "addVeneer")	$("#mq-veneerFilePick").trigger("click");				// Load veneer	
 			if (e.target.id == "showHelp") 	window.open("https://docs.google.com/document/d/e/2PACX-1vQN3NGoUq_UyiJbCMU6E8LtINwwv-smmPJShWXnUxt1RvmJZmTonavAGRiYSemsEJ51Bt6T3ZPHh3eV/pub","_blank");
 			if (e.target.id == "sendBack")	app.SendToBack();										// Send to back
