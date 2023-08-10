@@ -173,7 +173,7 @@ class App  {
 
 	Scale()																						// SCALE SVG
 	{
-		let x=this.bBox.width/this.scale/.8;														// Set x scale 80%
+		let x=this.bBox.width/this.scale/.8														// Set x scale 80%
 		let y=this.bBox.height/this.scale/.8;														// Y
 		$(this.svg.querySelectorAll("svg"))[0].setAttribute("viewBox",`${-x/10+this.bBox.x} ${this.bBox.y} ${x} ${y}`);	// Set SVG view box
 	}
@@ -189,17 +189,26 @@ class App  {
 		this.AddVeneers(this.veneers);																// Add default veneers										
 		$(this.svg.querySelectorAll("svg"))[0].removeAttribute("height")							// Disable height
 		$(this.svg.querySelectorAll("svg"))[0].setAttribute("width",window.innerWidth)				// Set width
-		$(this.svg.querySelectorAll("svg"))[0].setAttribute("height",window.innerHeight-30)			// Set width
+		$(this.svg.querySelectorAll("svg"))[0].setAttribute("height",window.innerHeight-30)			// Set height
 		this.Scale();																				// Scale SVG
-		
+		$(app.svg.querySelectorAll("svg"))[0].setAttribute('transform',`translate(0,0)`);			// Set translate to 0
+
 		$(this.svg).on("wheel",(e)=>{																// ON THUMB WHEEL
 			if (e.originalEvent.deltaY < 0) $("#scaleUp").trigger("click"); 						// Up
 			else 							$("#scaleDown").trigger("click") 	 					// Down
 			});
 
 		$(this.svg).on("keydown",function(e) {														// HANDLE KEYPRESS
+			let x=0,y=0;
 			if ((e.keyCode == 90) && !e.shiftKey && e.ctrlKey) 	app.UnDo();							// UNDO KEY (Ctrl+Z)  
 			if ((e.keyCode == 65) && !e.shiftKey && e.ctrlKey) 	app.SelectAll();					// UNSELECT ALLKEY (Ctrl+A  
+			let v=$(app.svg.querySelectorAll("svg"))[0].getAttribute('transform').match(/translate\((.+),(.+)\)/);		// Get transforms
+			if (v)	x=v[1],y=v[2];	
+			if (e.keyCode == 37) 		x=x-0-10;													// Left
+			else if (e.keyCode == 39) 	x=x-0+10;													// Right
+			else if (e.keyCode == 38) 	y=y-0-10;													// Up
+			else if (e.keyCode == 40) 	y=y-0+10;													// Down
+			$(app.svg.querySelectorAll("svg"))[0].setAttribute('transform',`translate(${x},${y})`);	// Move svg
 			e.stopImmediatePropagation();															// Stop propagation
 			});
 
