@@ -161,6 +161,8 @@ class App  {
 		this.scale=1;																				// SVG scale factor
 		this.vScale=.4;																				// Veneer scaling
 		this.bBox={}																				// Original SVG bounding box
+		this.curX=this.curY=0;																		// Reset to 0
+
 		this.veneers=["Anigre","Bamboo","Birch","BirdsEyeOak","Bloodwood","Bubinga","Cherry",		// Veneer list
 			"Eucalyptus","Lacewood","Lark","Mahogany","Makope","Maple","Monkeypod","Padauk",
 			"Paulonia","Poplar","RedBurl","RedOak",	"Saple","SpanishCedar","Walnut","Wenge","Zebrawood" 
@@ -173,25 +175,26 @@ class App  {
 
 	Scale()																						// SCALE SVG
 	{
-		let x=this.bBox.width/this.scale/.8														// Set x scale 80%
-		let y=this.bBox.height/this.scale/.8;														// Y
-		$(this.svg.querySelectorAll("svg"))[0].setAttribute("viewBox",`${-x/10+this.bBox.x} ${this.bBox.y} ${x} ${y}`);	// Set SVG view box
+		let x=window.innerWidth/this.scale														// Set x scale 80%
+		let y=this.bBox.height/this.scale;													// Y
+		$(this.svg.querySelectorAll("svg"))[0].setAttribute("viewBox",`${this.curX} ${this.curY} ${x} ${y}`);	// Set SVG view box
 	}
 
 	ProcessSVG(existing=0, callback)															// PROCESS SVG AFTER LOADING
 	{
 		let i,o;
 		let w=window.innerWidth;																	// Desired width
-		let lineWid=this.bBox.width/w;																// Line width based on frame
 		this.svg=document.getElementById("svgFile").contentDocument;								// Point at SVG object
 		this.paths=Array.from(this.svg.querySelectorAll("path"));									// Get all paths
 		this.bBox=$(this.svg.querySelectorAll("svg"))[0].getBBox();									// Get bounding boxs
+		let lineWid=this.bBox.width/w;																// Line width based on frame
 		this.AddVeneers(this.veneers);																// Add default veneers										
-		$(this.svg.querySelectorAll("svg"))[0].removeAttribute("height")							// Disable height
-		$(this.svg.querySelectorAll("svg"))[0].setAttribute("width",window.innerWidth)				// Set width
-		$(this.svg.querySelectorAll("svg"))[0].setAttribute("height",window.innerHeight-30)			// Set height
-		this.Scale();																				// Scale SVG
-		$(app.svg.querySelectorAll("svg"))[0].setAttribute('transform',`translate(0,0)`);			// Set translate to 0
+		$(this.svg.querySelectorAll("svg"))[0].setAttribute("width","100%")							// Set width
+		$(this.svg.querySelectorAll("svg"))[0].setAttribute("height","100vh")						// Set height
+		
+		this.curX=this.curY=0;																		// Reset to 0
+		this.scale=this.bBox.width/w;																// Set scale
+		this.Scale();																				// Scale/psition SVG
 
 		$(this.svg).on("wheel",(e)=>{																// ON THUMB WHEEL
 			if (e.originalEvent.deltaY < 0) $("#scaleUp").trigger("click"); 						// Up
@@ -202,13 +205,11 @@ class App  {
 			let x=0,y=0;
 			if ((e.keyCode == 90) && !e.shiftKey && e.ctrlKey) 	app.UnDo();							// UNDO KEY (Ctrl+Z)  
 			if ((e.keyCode == 65) && !e.shiftKey && e.ctrlKey) 	app.SelectAll();					// UNSELECT ALLKEY (Ctrl+A  
-			let v=$(app.svg.querySelectorAll("svg"))[0].getAttribute('transform').match(/translate\((.+),(.+)\)/);		// Get transforms
-			if (v)	x=v[1],y=v[2];	
-			if (e.keyCode == 37) 		x=x-0-10;													// Left
-			else if (e.keyCode == 39) 	x=x-0+10;													// Right
-			else if (e.keyCode == 38) 	y=y-0-10;													// Up
-			else if (e.keyCode == 40) 	y=y-0+10;													// Down
-			$(app.svg.querySelectorAll("svg"))[0].setAttribute('transform',`translate(${x},${y})`);	// Move svg
+			if (e.keyCode == 37) 		app.curX=app.curX-0-10;										// Left
+			else if (e.keyCode == 39) 	app.curX=app.curX-0+10;										// Right
+			else if (e.keyCode == 38) 	app.curY=app.curY-0+10;										// Up
+			else if (e.keyCode == 40) 	app.curY=app.curY-0-10;										// Down
+			app.Scale();																			// Set position
 			e.stopImmediatePropagation();															// Stop propagation
 			});
 
@@ -320,7 +321,7 @@ class App  {
 	ScaleVeneers(scale)																			// SCALE VENEERS
 	{
 		let i,r;
-		$("#backDiv").css("transform",`translate(-50%,-50%) scale(${.8*scale})`);					// Set bg scale																				// A veneer
+		$("#backDiv").css("transform",`translate(-50%,-50%) scale(${scale})`);					// Set bg scale																				// A veneer
 		let vs=this.bBox.width/window.innerWidth*scale;												// Veneer scale based on frame
 		let v=Array.from(this.svg.querySelectorAll("pattern"));										// Get all patterns
 		for (i=0;i<v.length;++i) {																	// For each one
