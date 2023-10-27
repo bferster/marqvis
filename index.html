@@ -132,8 +132,9 @@
 			if (e.target.id == "addColor") 	GetColor("Choose color","Pick new shape color","#009900",(c)=>{ 	// Add shape color
 													$("#veneer").append("<option>Color="+c+"</option>"); });	// Add to select
 			});											
+		$(window).on("keydown",(e)=>{ app.HandleKeyStroke(e); }); 									// HANDLE KEYPRESS
 		$("#scaleUp").on("click",  	()=>{app.scale*=1.2; app.Scale(); });							// SCALE UP
-		$("#scaleDown").on("click",	()=>{app.scale/=1.2; app.Scale() });							// SCALE DOWN
+		$("#scaleDown").on("click",	()=>{app.scale/=1.2; app.Scale(); });							// SCALE DOWN
 		$("#fileMenu").on("click", 	()=>{ $("#fmenu").show(); });									// OPEN FILE MENU
 		$("#editMenu").on("click", 	()=>{ $("#emenu").show(); });									// OPEN EDIT MENU
 		$("#grain").on("change",   	()=>{ app.ScaleVeneers($("#grain").val()); });					// SET VENEER GRAIN LEVEL
@@ -142,7 +143,7 @@
 		$("#mq-style").on("click",  ()=>{ let v=$("#mq-style").text().match(/....(.*?).(\d+)°/);
 										$("#veneer").val(v[1]);		$("#rotation").val(Math.floor(v[2]/15));							
 										Sound("click");
-										});
+										});	
 	});
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,6 +163,7 @@ class App  {
 		this.vScale=.4;																				// Veneer scaling
 		this.bBox={}																				// Original SVG bounding box
 		this.curX=this.curY=0;																		// Reset to 0
+		this.lineWid=1;																				// Holdas linewidth
 
 		this.veneers=["Anigre","Bamboo","Birch","BirdsEyeOak","Bloodwood","Bubinga","Cherry",		// Veneer list
 			"Eucalyptus","Lacewood","Lark","Mahogany","Makope","Maple","Monkeypod","Padauk",
@@ -180,39 +182,41 @@ class App  {
 		$(this.svg.querySelectorAll("svg"))[0].setAttribute("viewBox",`${this.curX} ${this.curY} ${x} ${y}`);	// Set SVG view box
 	}
 
+	HandleKeyStroke(e)																			// HANDLE KEYSTROKE
+	{
+		if ((e.keyCode == 90) && !e.shiftKey && e.ctrlKey) 	app.UnDo();								// UNDO KEY (Ctrl+Z)  
+		if ((e.keyCode == 65) && !e.shiftKey && e.ctrlKey) 	app.SelectAll();						// UNSELECT ALLKEY (Ctrl+A  
+		if (e.keyCode == 37) 		app.curX=app.curX-0+10;											// Left
+		else if (e.keyCode == 39) 	app.curX=app.curX-0-10;											// Right
+		else if (e.keyCode == 38) 	app.curY=app.curY-0+10;											// Up
+		else if (e.keyCode == 40) 	app.curY=app.curY-0-10;											// Down
+		app.Scale();																				// Set position
+		e.stopImmediatePropagation();																// Stop propagation
+	}
+		
 	ProcessSVG(existing=0, callback)															// PROCESS SVG AFTER LOADING
 	{
 		let i,o;
 		let w=window.innerWidth;																	// Desired width
 		this.svg=document.getElementById("svgFile").contentDocument;								// Point at SVG object
-		this.paths=Array.from(this.svg.querySelectorAll("path"));									// Get all paths
+		this.paths=Array.from(this.svg.querySelectorAll("path,rect,ellipse,circle"));				// Get all paths
 		this.bBox=$(this.svg.querySelectorAll("svg"))[0].getBBox();									// Get bounding boxs
-		let lineWid=this.bBox.width/w;																// Line width based on frame
+		app.lineWid=Math.max(.5,w/this.bBox.width/10);												// Line width based on frame
 		this.AddVeneers(this.veneers);																// Add default veneers										
 		$(this.svg.querySelectorAll("svg"))[0].setAttribute("width","100%")							// Set width
 		$(this.svg.querySelectorAll("svg"))[0].setAttribute("height","100vh")						// Set height
 		
 		this.curX=this.curY=0;																		// Reset to 0
 		this.scale=this.bBox.width/w;																// Set scale
-		this.Scale();																				// Scale/psition SVG
+		this.Scale();																				// Scale/position SVG
 
 		$(this.svg).on("wheel",(e)=>{																// ON THUMB WHEEL
 			if (e.originalEvent.deltaY < 0) $("#scaleUp").trigger("click"); 						// Up
 			else 							$("#scaleDown").trigger("click") 	 					// Down
 			});
 
-		$(this.svg).on("keydown",function(e) {														// HANDLE KEYPRESS
-			let x=0,y=0;
-			if ((e.keyCode == 90) && !e.shiftKey && e.ctrlKey) 	app.UnDo();							// UNDO KEY (Ctrl+Z)  
-			if ((e.keyCode == 65) && !e.shiftKey && e.ctrlKey) 	app.SelectAll();					// UNSELECT ALLKEY (Ctrl+A  
-			if (e.keyCode == 37) 		app.curX=app.curX-0-10;										// Left
-			else if (e.keyCode == 39) 	app.curX=app.curX-0+10;										// Right
-			else if (e.keyCode == 38) 	app.curY=app.curY-0+10;										// Up
-			else if (e.keyCode == 40) 	app.curY=app.curY-0-10;										// Down
-			app.Scale();																			// Set position
-			e.stopImmediatePropagation();															// Stop propagation
-			});
-
+		$(this.svg).on("keydown",(e)=>{ app.HandleKeyStroke(e); }); 								// HANDLE KEYPRESS
+	
 		$(this.svg).on("click",(e)=>{ 																// ON SVG CLICK
 			$("#fmenu").hide(); 																	// Close file menu									 
 			$("#emenu").hide(); 																	// Close edit menu									 
@@ -227,7 +231,7 @@ class App  {
 			o=this.paths[i];																		// Point at it
 			o.id="ptx-"+i;																			// Set id																						
 			o.isSelected=0;																			// Not selected
-			if (!existing) $(o).css({"stroke":"#000", "stroke-width":lineWid, "fill-opacity":1,"fill":(o.style.stroke == "rgb(0, 0, 255)") ? "none" : "#fff"});	// Black edge and filled -- not BLUE!
+			if (!existing) $(o).css({"stroke":"#000", "stroke-width":app.lineWid, "fill-opacity":1,"fill":(o.style.stroke == "rgb(0, 0, 255)") ? "none" : "#fff"});	// Black edge and filled -- not BLUE!
 
 			$(o).on("click",(e)=>{																	// ON CLICK
 				let id=e.target.id.substring(4)-0;													// Get id
@@ -261,14 +265,13 @@ class App  {
 	 {																		
 		let i,v;
 		let w=window.innerWidth;																	// Desired width
-		let lineWid=this.bBox.width/w;																// Line width based on frame
-		for (i=0;i<app.paths.length;++i) {															// For each path
-			if (app.paths[i].isSelected) {
-				$(app.paths[i]).css({"stroke":"red",  "stroke-width":lineWid*2 });					// Select
+			for (i=0;i<app.paths.length;++i) {														// For each path
+			if (app.paths[i].isSelected) {															// If selected
+				$(app.paths[i]).css({"stroke":"red",  "stroke-width":app.lineWid*2 });				// Select
 				v=$(app.paths[i]).css("fill").match(/url\("#pat-(.*?)(\d+)"\)/i);					// Get veneer and rot
 				if (v) $("#mq-style").html("&nbsp; &nbsp; "+v[1]+" "+v[2]*15+"°");					// If a veneer set, show it
 				}
-			else $(app.paths[i]).css({"stroke":"#000", "stroke-width":lineWid   });					// Deselect
+			else $(app.paths[i]).css({"stroke":"#000", "stroke-width":app.lineWid   });				// Deselect
 			}
 	}
 	
