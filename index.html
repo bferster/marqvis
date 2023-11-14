@@ -83,6 +83,9 @@
 			<option>No veneer</option>
 		</select>
 		<div class="mq-bs" style="margin-left:9px" onclick="app.ApplyVeneer()">SET</div>
+		<select id="layers" class="mq-is" style="margin-left:8px;cursor:pointer;max-width:120px">
+			<option>Select layers</option>
+		</select>
 		<span id="mq-style"></span>
 		<div style="margin-right:12px;cursor:pointer;float:right">
 			<img id="scaleDown" src="img/downdot.gif" style="margin-right:12px" title="Make SVG smaller">
@@ -138,6 +141,7 @@
 		$("#fileMenu").on("click", 	()=>{ $("#fmenu").show(); });									// OPEN FILE MENU
 		$("#editMenu").on("click", 	()=>{ $("#emenu").show(); });									// OPEN EDIT MENU
 		$("#grain").on("change",   	()=>{ app.ScaleVeneers($("#grain").val()); });					// SET VENEER GRAIN LEVEL
+		$("#layers").on("change",   ()=>{ app.SelectLayer($("#layers").val()); });					// SELECT LAYER
 		$("#mq-svgFilePick").on("change",(e)=>{	app.ReadSVGFile(e);	$("#mq-svgFilePick").val("")});	// SVG FILE PICK (then delect button!)
 		$("#mq-veneerFilePick").on("change",(e)=>{	app.LoadVeneerFile(e);	$("#mq-veneerFilePick").val("")});	// VENEER FILE PICK (then delect button!)
 		$("#mq-style").on("click",  ()=>{ let v=$("#mq-style").text().match(/....(.*?).(\d+)°/);
@@ -158,13 +162,13 @@ class App  {
 		this.undos=[];																				// Hold undos
 		this.svg={};																				// Hold SVG file
 		this.paths=[];																				// Hold SVG paths
-		this.selects=[];																			// Hold selects
+		this.paths=[];																				// Hold SVG paths
+		this.groups=[];																				// Hold groups
 		this.scale=1;																				// SVG scale factor
 		this.vScale=.4;																				// Veneer scaling
 		this.bBox={}																				// Original SVG bounding box
 		this.curX=this.curY=0;																		// Reset to 0
-		this.lineWid=1;																				// Holdas linewidth
-
+		this.lineWid=".5";																			// Line width
 		this.veneers=["Anigre","Bamboo","Birch","BirdsEyeOak","Bloodwood","Bubinga","Cherry",		// Veneer list
 			"Eucalyptus","Lacewood","Lark","Mahogany","Makope","Maple","Monkeypod","Padauk",
 			"Paulonia","Poplar","RedBurl","RedOak",	"Saple","SpanishCedar","Walnut","Wenge","Zebrawood" 
@@ -193,6 +197,7 @@ class App  {
 		else if (e.keyCode == 107) 	{ app.scale*=1.2; app.Scale(); }								// Scale up
 		else if (e.keyCode == 109) 	{ app.scale/=1.2; app.Scale(); }								// Scale down
 		else if ((e.keyCode == 83) && e.ctrlKey) { e.preventDefault(); app.SaveSVG(); }				// Save
+//		if (e.keyCode == 90) app.SelectLayer("layer1")	
 		app.Scale();																				// Set position
 		e.stopImmediatePropagation();																// Stop propagation
 	}
@@ -203,9 +208,13 @@ class App  {
 		let w=window.innerWidth;																	// Desired width
 		this.svg=document.getElementById("svgFile").contentDocument;								// Point at SVG object
 		this.paths=Array.from(this.svg.querySelectorAll("path,rect,ellipse,circle"));				// Get all paths
+		this.groups=Array.from(this.svg.querySelectorAll("g"));										// Get all groups
+		$("#layers").empty();																		// Clean layers pulldown
+		$("#layers").append("<option>Select layer<option>");										// Add label
+		for (i=0;i<this.groups.length;++i) 	$("#layers").append("<option>"+this.groups[i].id+"<option>");	// Add layer to pulldown
 		$(this.svg.querySelectorAll("image")).remove();												// Clear all images
 		this.bBox=$(this.svg.querySelectorAll("svg"))[0].getBBox();									// Get bounding boxs
-		app.lineWid=Math.max(.5,w/this.bBox.width/10);												// Line width based on frame
+		app.lineWid=Math.min(1,Math.max(.5,this.bBox.width/w*4));									// Line width based on frame
 		this.AddVeneers(this.veneers);																// Add default veneers										
 		$(this.svg.querySelectorAll("svg"))[0].setAttribute("width","100%")							// Set width
 		$(this.svg.querySelectorAll("svg"))[0].setAttribute("height","100vh")						// Set height
@@ -220,6 +229,7 @@ class App  {
 
 		$(this.svg).on("keydown",(e)=>{ app.HandleKeyStroke(e); }); 								// HANDLE KEYPRESS
 	
+		
 		$(this.svg).on("click",(e)=>{ 																// ON SVG CLICK
 			$("#fmenu").hide(); 																	// Close file menu									 
 			$("#emenu").hide(); 																	// Close edit menu									 
@@ -234,8 +244,8 @@ class App  {
 			o=this.paths[i];																		// Point at it
 			o.id="ptx-"+i;																			// Set id																						
 			o.isSelected=0;																			// Not selected
-			$(o).css({"opacity":1});																// No opacity
-			if (!existing) $(o).css({"stroke":"#000", "stroke-width":app.lineWid, "fill":(o.style.stroke == "rgb(0, 0, 255)") ? "none" : "#fff"});	// Black edge and filled -- not BLUE!
+			$(o).css({"opacity":1,"stroke":"#000","stroke-opacity":1.,"stroke-width":app.lineWid+"px"}); // Defaults
+			if (!existing) $(o).css({"fill":(o.style.stroke == "rgb(0, 0, 255)") ? "none" : "#fff"});	// Black edge and filled -- not BLUE!
 
 			$(o).on("click",(e)=>{																	// ON CLICK
 				let id=e.target.id.substring(4)-0;													// Get id
@@ -264,18 +274,29 @@ class App  {
 		for (i=0;i<app.paths.length;++i)	app.paths[i].isSelected=1;								// Select each path
 		app.ShowSelects();																			// Show them
 	}
-	
+
+	SelectLayer(name)																			// SELECT ALL SHAPES
+	{
+		let i;
+		for (i=0;i<app.paths.length;++i) {															// For each path
+			if (app.paths[i].parentNode.id == name)	app.paths[i].isSelected=1;						// In group
+			else									app.paths[i].isSelected=0;						// Nit
+			}
+		app.ShowSelects();																			// Show them
+	}
+
 	 ShowSelects()																				 // SHOW WHAT'S SELECTED
 	 {																		
 		let i,v;
 		let w=window.innerWidth;																	// Desired width
 			for (i=0;i<app.paths.length;++i) {														// For each path
 			if (app.paths[i].isSelected) {															// If selected
-				$(app.paths[i]).css({"stroke":"red",  "stroke-width":app.lineWid*2 });				// Select
+				$(app.paths[i]).css({"stroke":"red",  "stroke-width":(app.lineWid*2)+"px" });		// Select
 				v=$(app.paths[i]).css("fill").match(/url\("#pat-(.*?)(\d+)"\)/i);					// Get veneer and rot
 				if (v) $("#mq-style").html("&nbsp; &nbsp; "+v[1]+" "+v[2]*15+"°");					// If a veneer set, show it
-				}
-			else $(app.paths[i]).css({"stroke":"#000", "stroke-width":app.lineWid   });				// Deselect
+				$("#layers").val(app.paths[i].parentNode.id);										// Set layer	
+			}
+			else $(app.paths[i]).css({"stroke":"#000", "stroke-width":app.lineWid+"px" });			// Deselect
 			}
 	}
 	
