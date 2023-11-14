@@ -208,9 +208,16 @@ class App  {
 		this.svg=document.getElementById("svgFile").contentDocument;								// Point at SVG object
 		this.paths=Array.from(this.svg.querySelectorAll("path,rect,ellipse,circle"));				// Get all paths
 		this.groups=Array.from(this.svg.querySelectorAll("g"));										// Get all groups
+		
 		$("#layers").empty();																		// Clean layers pulldown
 		$("#layers").append("<option>Select layer</option>");										// Add label
-		for (i=0;i<this.groups.length;++i) 	if (this.groups[i].id)$("#layers").append("<option>"+this.groups[i].id+"</option>");	// Add layer to pulldown
+		for (i=0;i<this.groups.length;++i) {														// For each group
+			o=this.groups[i].id;																	// Default to id
+			if (this.groups[i].attributes && this.groups[i].attributes["inkscape:label"] && this.groups[i].attributes["inkscape:label"].value) // If defined
+				o=(this.groups[i].attributes["inkscape:label"].value);								// Use as label
+			if (this.groups[i].id)$("#layers").append("<option value="+this.groups[i].id+">"+o+"</option>");	// Add layer to pulldown
+			}
+
 		$(this.svg.querySelectorAll("image")).remove();												// Clear all images
 		this.bBox=$(this.svg.querySelectorAll("svg"))[0].getBBox();									// Get bounding boxs
 		this.AddVeneers(this.veneers);																// Add default veneers										
@@ -242,6 +249,8 @@ class App  {
 			o=this.paths[i];																		// Point at it
 			o.id="ptx-"+i;																			// Set id																						
 			o.isSelected=0;																			// Not selected
+			
+			
 			$(o).css({"opacity":1,"stroke":"#000","stroke-opacity":1,"stroke-width":"2px","vector-effect":"non-scaling-stroke"}); // Defaults
 			if (!existing) $(o).css({"fill":(o.style.stroke == "rgb(0, 0, 255)") ? "none" : "#fff"});	// Black edge and filled -- not BLUE!
 
