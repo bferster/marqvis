@@ -84,7 +84,7 @@
 		</select>
 		<div class="mq-bs" style="margin-left:9px" onclick="app.ApplyVeneer()">SET</div>
 		<select id="layers" class="mq-is" style="margin-left:8px;cursor:pointer;max-width:120px">
-			<option>Select layers</option>
+			<option value=""0">Select layers</option>
 		</select>
 		<span id="mq-style"></span>
 		<div style="margin-right:12px;cursor:pointer;float:right">
@@ -203,14 +203,14 @@ class App  {
 		
 	ProcessSVG(existing=0, callback)															// PROCESS SVG AFTER LOADING
 	{
-		let i,o;
+		let i,j,o;
 		let w=window.innerWidth;																	// Desired width
 		this.svg=document.getElementById("svgFile").contentDocument;								// Point at SVG object
 		this.paths=Array.from(this.svg.querySelectorAll("path,rect,ellipse,circle"));				// Get all paths
 		this.groups=Array.from(this.svg.querySelectorAll("g"));										// Get all groups
 		
 		$("#layers").empty();																		// Clean layers pulldown
-		$("#layers").append("<option>Select layer</option>");										// Add label
+		$("#layers").append("<option value='0'>Select layer</option>");								// Add label
 		for (i=0;i<this.groups.length;++i) {														// For each group
 			o=this.groups[i].id;																	// Default to id
 			if (this.groups[i].attributes && this.groups[i].attributes["inkscape:label"] && this.groups[i].attributes["inkscape:label"].value) // If defined
@@ -249,10 +249,9 @@ class App  {
 			o=this.paths[i];																		// Point at it
 			o.id="ptx-"+i;																			// Set id																						
 			o.isSelected=0;																			// Not selected
-			
-			
+			j=o.style.stroke;
 			$(o).css({"opacity":1,"stroke":"#000","stroke-opacity":1,"stroke-width":"2px","vector-effect":"non-scaling-stroke"}); // Defaults
-			if (!existing) $(o).css({"fill":(o.style.stroke == "rgb(0, 0, 255)") ? "none" : "#fff"});	// Black edge and filled -- not BLUE!
+			if (!existing) $(o).css({"fill":(j == "rgb(0, 0, 255)") ? "none" : "#fff","stroke-width":(j == "rgb(0, 0, 255)") ? "1px" : "2px"});			// Black edge and filled -- not BLUE ones!
 
 			$(o).on("click",(e)=>{																	// ON CLICK
 				let id=e.target.id.substring(4)-0;													// Get id
@@ -290,18 +289,19 @@ class App  {
 			else									app.paths[i].isSelected=0;						// Nit
 			}
 		app.ShowSelects();																			// Show them
+		$("#layers").val("0");																		// Reset pulldown	
 	}
 
-	 ShowSelects()																				 // SHOW WHAT'S SELECTED
-	 {																		
-		let i,v;
+	ShowSelects()																				 // SHOW WHAT'S SELECTED
+	{																		
+		let i,v,l;
 		let w=window.innerWidth;																	// Desired width
 			for (i=0;i<app.paths.length;++i) {														// For each path
 			if (app.paths[i].isSelected) {															// If selected
 				$(app.paths[i]).css({"stroke":"red"});												// Select
 				v=$(app.paths[i]).css("fill").match(/url\("#pat-(.*?)(\d+)"\)/i);					// Get veneer and rot
-				if (v) $("#mq-style").html("&nbsp; &nbsp; "+v[1]+" "+v[2]*15+"°");					// If a veneer set, show it
-				$("#layers").val(app.paths[i].parentNode.id);										// Set layer	
+				l=$("#layers").find("option[value='"+app.paths[i].parentNode.id+"']").text();		// Get label
+				if (v) $("#mq-style").html("&nbsp; &nbsp; "+v[1]+" "+v[2]*15+"° in <i>"+l+"<\i>");	// If a veneer set, show it
 			}
 			else $(app.paths[i]).css({"stroke":"#000"});											// Deselect
 			}
