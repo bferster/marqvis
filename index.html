@@ -168,9 +168,10 @@ class App  {
 		this.vScale=.4;																				// Veneer scaling
 		this.bBox={}																				// Original SVG bounding box
 		this.curX=this.curY=0;																		// Reset to 0
-		this.veneers=["Anigre","Bamboo","Birch","BirdsEyeOak","Bloodwood","Bubinga","Cherry",		// Veneer list
-			"Eucalyptus","Lacewood","Lark","Mahogany","Makope","Maple","Monkeypod","Padauk",
-			"Paulonia","Poplar","RedBurl","RedOak",	"Saple","SpanishCedar","Walnut","Wenge","Zebrawood" 
+		this.veneers=["Anigre","Ash","Bamboo","Birch","BirdsEyeOak","Bloodwood","Bubinga",			// Veneer list
+			"Butternut","Cherry","Eucalyptus","GreyOak","Lacewood","Lark","Mahogany","Makope",
+			"Maple","Monkeypod","Mozambique","Padauk","Paulonia","Poplar","Primavera","RedBurl",
+			"RedElm","RedOak","Saple","SpanishCedar","Walnut","Wenge","Zebrawood" 
 			];
 
 		$("#svgFile").prop("data", "logo.svg");														// Load file
@@ -250,8 +251,8 @@ class App  {
 			o.id="ptx-"+i;																			// Set id																						
 			o.isSelected=0;																			// Not selected
 			j=o.style.stroke;
-			$(o).css({"opacity":1,"stroke":"#000","stroke-opacity":1,"stroke-width":"2px","vector-effect":"non-scaling-stroke"}); // Defaults
-			if (!existing) $(o).css({"fill":(j == "rgb(0, 0, 255)") ? "none" : "#fff","stroke-width":(j == "rgb(0, 0, 255)") ? "1px" : "2px"});			// Black edge and filled -- not BLUE ones!
+			$(o).css({"opacity":1,"stroke":"#000","stroke-opacity":1,"fill-opacity":1,"stroke-width":"2px","vector-effect":"non-scaling-stroke"});	 // Defaults
+			if (!existing) $(o).css({"fill":(j == "rgb(0, 0, 255)") ? "none" : "#fff","stroke-width":(j == "rgb(0, 0, 255)") ? "0.5px" : "1px"});		// Black edge and filled -- not BLUE ones!
 
 			$(o).on("click",(e)=>{																	// ON CLICK
 				let id=e.target.id.substring(4)-0;													// Get id
