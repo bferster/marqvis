@@ -251,8 +251,8 @@ class App  {
 			o.id="ptx-"+i;																			// Set id																						
 			o.isSelected=0;																			// Not selected
 			j=o.style.stroke;
-			$(o).css({"opacity":1,"stroke":"#000","stroke-opacity":1,"fill-opacity":1,"stroke-width":"2px","vector-effect":"non-scaling-stroke"});	 // Defaults
-			if (!existing) $(o).css({"fill":(j == "rgb(0, 0, 255)") ? "none" : "#fff","stroke-width":(j == "rgb(0, 0, 255)") ? "0.5px" : "1px"});		// Black edge and filled -- not BLUE ones!
+			$(o).css({"opacity":1,"stroke":"#000","stroke-opacity":1,"fill-opacity":1,"stroke-width":"1px"});	 // Defaults
+			if (!existing) $(o).css({"fill":(j == "rgb(0, 0, 255)") ? "none" : "#fff","stroke-width":(j == "rgb(0, 0, 255)") ? "2px" : "1px"});		// Black edge and filled -- not BLUE ones!
 
 			$(o).on("click",(e)=>{																	// ON CLICK
 				let id=e.target.id.substring(4)-0;													// Get id
@@ -318,7 +318,7 @@ class App  {
 			for (j=0;j<12;++j) {																	// For each angle
 				pat=document.createElementNS("http://www.w3.org/2000/svg", 'pattern'); 				// Create a pattern in SVG's namespace
 				pat.setAttribute("patternUnits","userSpaceOnUse");									// Pattern unit
-				pat.setAttribute("width","1024"); 	pat.setAttribute("height","1024"); 				// Pattern size
+				pat.setAttribute("width","100%"); 	pat.setAttribute("height","100%"); 				// Pattern size
 				pat.setAttribute("id","pat-"+app.veneers[i]+j); 									// Id
 				pat.setAttribute("patternTransform",`rotate(${j*15}) scale(${vs} ${vs})`); 			// Transform
 				$(pat).html(`<image href="veneers/${app.veneers[i]}.jpg"/>`);						// Image
@@ -349,15 +349,16 @@ class App  {
 		else if ($("#veneer").val() == "No veneer")													// No veneer
 			$("#backDiv").css("background-color","#fff");											// White
 		else{																						// An image
-			$("#backDiv").css("background",`url(veneers/${$("#veneer").val()}.jpg) 0 0 repeat`);	// Set url																				// A veneer
-			$("#backDiv").css("transform",`translate(-50%,-50%) rotate(${$("#rotation").val()*15}deg) scale(.32)`);		// Set rotation																				// A veneer
+			$("#backDiv").css("background",`url(veneers/${$("#veneer").val()}.jpg)`);				// Set url																				// A veneer
+			$("#backDiv").css("background-size:cover")	
+			$("#backDiv").css("transform",`translate(-50%,-50%) rotate(${$("#rotation").val()*15}deg)`); // Set rotation																				// A veneer
 			}
 	}
 
 	ScaleVeneers(scale)																			// SCALE VENEERS
 	{
 		let i,r;
-		$("#backDiv").css("transform",`translate(-50%,-50%) scale(${scale})`);					// Set bg scale																				// A veneer
+//		$("#backDiv").css("transform",`translate(-50%,-50%) scale(${scale})`);						// Set bg scale																				// A veneer
 		let vs=this.bBox.width/window.innerWidth*scale;												// Veneer scale based on frame
 		let v=Array.from(this.svg.querySelectorAll("pattern"));										// Get all patterns
 		for (i=0;i<v.length;++i) {																	// For each one
