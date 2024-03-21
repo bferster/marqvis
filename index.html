@@ -114,7 +114,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 	var app=null;
-
+	
 	$(document).ready(function() {								           						// ON PAGE LOADED
 		$("#fmenu" ).menu();																		// Alloc file menu
 		$("#emenu" ).menu();																		// Alloc file menu
@@ -147,7 +147,8 @@
 		$("#mq-style").on("click",  ()=>{ let v=$("#mq-style").text().match(/....(.*?).(\d+)°/);
 										$("#veneer").val(v[1]);		$("#rotation").val(Math.floor(v[2]/15));							
 										Sound("click");
-										});	
+										});
+								
 	});
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,10 +216,9 @@ class App  {
 		for (i=0;i<this.groups.length;++i) {														// For each group
 			o=this.groups[i].id;																	// Default to id
 			if (this.groups[i].attributes && this.groups[i].attributes["inkscape:label"] && this.groups[i].attributes["inkscape:label"].value) // If defined
-				o=(this.groups[i].attributes["inkscape:label"].value);								// Use as label
+				o=this.groups[i].attributes["inkscape:label"].value;								// Use as label
 			if (this.groups[i].id)$("#layers").append("<option value="+this.groups[i].id+">"+o+"</option>");	// Add layer to pulldown
 			}
-
 		$(this.svg.querySelectorAll("image")).remove();												// Clear all images
 		this.bBox=$(this.svg.querySelectorAll("svg"))[0].getBBox();									// Get bounding boxs
 		this.AddVeneers(this.veneers);																// Add default veneers										
@@ -228,14 +228,23 @@ class App  {
 		this.scale=1;																				// Reset scale
 		this.Scale();																				// Scale/position SVG
 
+		$(this.svg).on("keydown",(e)=>{ app.HandleKeyStroke(e); }); 								// HANDLE KEYPRESS
+
 		$(this.svg).on("wheel",(e)=>{																// ON THUMB WHEEL
 			if (e.originalEvent.deltaY < 0) $("#scaleUp").trigger("click"); 						// Up
 			else 							$("#scaleDown").trigger("click") 	 					// Down
 			});
 
-		$(this.svg).on("keydown",(e)=>{ app.HandleKeyStroke(e); }); 								// HANDLE KEYPRESS
+		$(this.svg).on("mousemove",(e)=>{ 															// ON SVG MOUSEMOVE
+			if (e.buttons) {																		// If scroll wheeel/button pressed
+				if (e.originalEvent.movementX < 0) 		app.curX=app.curX-0+3;						// Left
+				else if (e.originalEvent.movementX > 0) app.curX=app.curX-0-3;						// Right
+				if (e.originalEvent.movementY < 0) 		app.curY=app.curY-0+3;						// Up
+				else if (e.originalEvent.movementY > 0) app.curY=app.curY-0-3;						// Down
+				app.Scale();																		// Move it
+				}
+			});
 	
-		
 		$(this.svg).on("click",(e)=>{ 																// ON SVG CLICK
 			$("#fmenu").hide(); 																	// Close file menu									 
 			$("#emenu").hide(); 																	// Close edit menu									 
