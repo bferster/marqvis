@@ -251,8 +251,8 @@ class App  {
 			o.id="ptx-"+i;																			// Set id																						
 			o.isSelected=0;																			// Not selected
 			j=o.style.stroke;
-			$(o).css({"opacity":1,"stroke":"#000","stroke-opacity":1,"fill-opacity":1,"stroke-width":"1px"});	 // Defaults
-			if (!existing) $(o).css({"fill":(j == "rgb(0, 0, 255)") ? "none" : "#fff","stroke-width":(j == "rgb(0, 0, 255)") ? "2px" : "1px"});		// Black edge and filled -- not BLUE ones!
+			$(o).css({"opacity":1,"stroke":"#000","stroke-opacity":1,"fill-opacity":1,"stroke-width":"1px","paint-order":"stroke"});	 // Defaults
+			if (!existing) $(o).css({"fill":(j == "rgb(0, 0, 255)") ? "none" : "#fff","stroke-width":(j == "rgb(0, 0, 255)") ? "2px" : ".75px"});		// Black edge and filled -- not BLUE ones!
 
 			$(o).on("click",(e)=>{																	// ON CLICK
 				let id=e.target.id.substring(4)-0;													// Get id
