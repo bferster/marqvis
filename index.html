@@ -59,11 +59,10 @@
 		<span id="fileMenu" style="margin-left:26px;cursor:pointer">File</span>
 		<span id="editMenu" style="margin-left:26px;cursor:pointer">Edit</span>
 		<select id="grain" class="mq-is" style="margin-left:50px;cursor:pointer">
-			<option value=".4">Normal grain</option>
-			<option value=".1">Very fine grain</option>
-			<option value=".2">Fine grain</option>
-			<option value=".6">Coarse grain</option>
-			<option value="1.0">Very coarse grain</option>
+			<option value=".5">Normal grain</option>
+			<option value=".3">Fine grain</option>
+			<option value="1.0">Coarse grain</option>
+			<option value="1.5">Very coarse grain</option>
 		</select>
 		<select id="rotation" class="mq-is" style="margin-left:8px;cursor:pointer">
 			<option value="0">No rotation</option>
@@ -169,6 +168,7 @@ class App  {
 		this.vScale=.4;																				// Veneer scaling
 		this.bBox={}																				// Original SVG bounding box
 		this.curX=this.curY=0;																		// Reset to 0
+		this.lastClickX=this.lastClickY=0;															// Last place clicked
 		this.veneers=["Anigre","Ash","Bamboo","Birch","BirdsEyeOak","Bloodwood","Bubinga",			// Veneer list
 			"Butternut","Cherry","Eucalyptus","GreyOak","Lacewood","Lark","Mahogany","Makope",
 			"Maple","Monkeypod","Mozambique","Padauk","Paulonia","Poplar","Primavera","RedBurl",
@@ -226,7 +226,8 @@ class App  {
 		$(this.svg.querySelectorAll("svg"))[0].setAttribute("height","100vh")						// Set height
 		this.curX=this.curY=0;																		// Reset to 0
 		this.scale=1;																				// Reset scale
-		this.Scale();																				// Scale/position SVG
+		app.ScaleVeneers($("#grain").val());														// Set veneer grain/rotation
+		this.Scale();																				// Scale SVG								
 
 		$(this.svg).on("keydown",(e)=>{ app.HandleKeyStroke(e); }); 								// HANDLE KEYPRESS
 
@@ -237,10 +238,11 @@ class App  {
 
 		$(this.svg).on("mousemove",(e)=>{ 															// ON SVG MOUSEMOVE
 			if (e.buttons) {																		// If scroll wheeel/button pressed
-				if (e.originalEvent.movementX < 0) 		app.curX=app.curX-0+3;						// Left
-				else if (e.originalEvent.movementX > 0) app.curX=app.curX-0-3;						// Right
-				if (e.originalEvent.movementY < 0) 		app.curY=app.curY-0+3;						// Up
-				else if (e.originalEvent.movementY > 0) app.curY=app.curY-0-3;						// Down
+				if ((Math.abs(e.pageX-this.lastClickX) < 50) || (Math.abs(e.pageY-this.lastClickY) < 50)) return;
+				if (e.originalEvent.movementX < 0) 		app.curX=app.curX-0+1;						// Left
+				else if (e.originalEvent.movementX > 0) app.curX=app.curX-0-1;						// Right
+				if (e.originalEvent.movementY < 0) 		app.curY=app.curY-0+1;						// Up
+				else if (e.originalEvent.movementY > 0) app.curY=app.curY-0-1;						// Down
 				app.Scale();																		// Move it
 				}
 			});
@@ -248,6 +250,7 @@ class App  {
 		$(this.svg).on("click",(e)=>{ 																// ON SVG CLICK
 			$("#fmenu").hide(); 																	// Close file menu									 
 			$("#emenu").hide(); 																	// Close edit menu									 
+			this.lastClickX=e.pageX; 	this.lastClickY=e.pageY;									// Save last click position
 			if (e.target.id.substring(0,4) != "ptx-") {												// If a shape
 				for (i=0;i<this.paths.length;++i) this.paths[i].isSelected=0;						// Deselect all
 				this.ShowSelects();																	// Show what's selected
@@ -271,12 +274,14 @@ class App  {
 					for (i=0;i<this.paths.length;++i) this.paths[i].isSelected=0;					// Deselect all
 					this.paths[id].isSelected=1;													// Select this one
 					}
-				this.ShowSelects();																		// Show what's selected
+				this.ShowSelects();																	// Show what's selected
+				this.lastClickX=e.pageX; 	this.lastClickY=e.pageY;								// Save last click position
 				e.stopImmediatePropagation();														// Stop propagation
 				});
 
 			$(o).on("dblclick",(e)=>{																// ON DOUBLE CLICK
 				let id=e.target.id.substring(4)-0;													// Get id
+				this.lastClickX=e.pageX; 	this.lastClickY=e.pageY;								// Save last click position
 				this.paths[id].isSelected=1;														// Select it
 				this.ApplyVeneer();																	// Apply veneer to path													
 				e.stopImmediatePropagation();														// Stop propagation
@@ -359,21 +364,21 @@ class App  {
 			$("#backDiv").css("background-color","#fff");											// White
 		else{																						// An image
 			$("#backDiv").css("background",`url(veneers/${$("#veneer").val()}.jpg)`);				// Set url																				// A veneer
-			$("#backDiv").css("background-size:cover")	
-			$("#backDiv").css("transform",`translate(-50%,-50%) rotate(${$("#rotation").val()*15}deg)`); // Set rotation																				// A veneer
+			$("#backDiv").css("background-size:contain")	
+			$("#backDiv").css("transform",`translate(-50%,-50%) rotate(${$("#rotation").val()*15}deg) scale(${$("#grain").val()/2})`); // Set rotation																				// A veneer
 			}
 	}
 
 	ScaleVeneers(scale)																			// SCALE VENEERS
 	{
 		let i,r;
-//		$("#backDiv").css("transform",`translate(-50%,-50%) scale(${scale})`);						// Set bg scale																				// A veneer
 		let vs=this.bBox.width/window.innerWidth*scale;												// Veneer scale based on frame
 		let v=Array.from(this.svg.querySelectorAll("pattern"));										// Get all patterns
 		for (i=0;i<v.length;++i) {																	// For each one
 			r=v[i].id.match(/.*(\d.*)/)[1];															// Get rotation
 			v[i].setAttribute("patternTransform",`rotate(${r*22.5}) scale(${vs} ${vs})`); 			// Set transform	
 			}
+		this.SetBackground();																		// Set bg grain/rotation
 		}
 
 	ApplyVeneer()																				// SET PATH'S VENEER
