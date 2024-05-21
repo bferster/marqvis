@@ -263,8 +263,8 @@ class App  {
 			o.id="ptx-"+i;																			// Set id																						
 			o.isSelected=0;																			// Not selected
 			j=o.style.stroke;
-			$(o).css({"opacity":1,"stroke":"#000","stroke-opacity":1,"fill-opacity":1,"stroke-width":"1px","paint-order":"stroke"});	 // Defaults
-			if (!existing) $(o).css({"fill":(j == "rgb(0, 0, 255)") ? "none" : "#fff","stroke-width":(j == "rgb(0, 0, 255)") ? "2px" : ".75px"});		// Black edge and filled -- not BLUE ones!
+			$(o).css({"opacity":1,"stroke":"#000","stroke-opacity":1,"fill-opacity":1,"stroke-width":".75px","paint-order":"stroke"});	 // Defaults
+			if (!existing) $(o).css({"fill":(j == "rgb(0, 0, 255)") ? "none" : "#fff"});			// Filled -- not the BLUE lines!
 
 			$(o).on("click",(e)=>{																	// ON CLICK
 				let id=e.target.id.substring(4)-0;													// Get id
@@ -358,10 +358,13 @@ class App  {
 
 	SetBackground()																				// SET BACKGROUND
 	{
+		
 		if ($("#veneer").val().match(/Color=#/))													// A flat color
 			$("#backDiv").css("background-color",$("#veneer").val().substring(6));					// Extract set color
-		else if ($("#veneer").val() == "No veneer")													// No veneer
-			$("#backDiv").css("background-color","#fff");											// White
+		else if ($("#veneer").val() == "No veneer")	{												// No veneer
+			$("#backDiv").css("background","none");													// No image
+			$("#backDiv").css("background-color",$("#veneer").val().substring(6));					// Extract set color
+			}
 		else{																						// An image
 			$("#backDiv").css("background",`url(veneers/${$("#veneer").val()}.jpg)`);				// Set url																				// A veneer
 			$("#backDiv").css("background-size:contain")	
@@ -376,15 +379,16 @@ class App  {
 		let v=Array.from(this.svg.querySelectorAll("pattern"));										// Get all patterns
 		for (i=0;i<v.length;++i) {																	// For each one
 			r=v[i].id.match(/.*(\d.*)/)[1];															// Get rotation
-			v[i].setAttribute("patternTransform",`rotate(${r*22.5}) scale(${vs} ${vs})`); 			// Set transform	
+			v[i].setAttribute("patternTransform",`rotate(${r*15}) scale(${vs} ${vs})`); 			// Set transform	
 			}
-		this.SetBackground();																		// Set bg grain/rotation
 		}
 
 	ApplyVeneer()																				// SET PATH'S VENEER
 	{
 		let i;
 		let str="url(#pat-"+$("#veneer").val()+$("#rotation").val()+")";							// Set fill id
+		trace(str)
+		
 		if ($("#veneer").val() == "No veneer")			str="#ffffff";								// Fill with white
 		else if ($("#veneer").val().match(/Color=#/))	str=$("#veneer").val().substring(6);		// Extract set color
 		this.Do();																					// Save state for undo
